@@ -21,18 +21,23 @@ function ensureAudio(): AudioContext | null {
   if (typeof window === 'undefined') {
     return null;
   }
-  const w = window as Window & { webkitAudioContext?: typeof AudioContext };
-  const Ctor = w.AudioContext ?? w.webkitAudioContext;
+  const wa = window as unknown as {
+    AudioContext?: typeof AudioContext;
+    webkitAudioContext?: typeof AudioContext;
+  };
+  const Ctor = wa.AudioContext ?? wa.webkitAudioContext;
   if (!Ctor) {
     return null;
   }
-  if (!audioCtx) {
-    audioCtx = new Ctor();
+  let ctx = audioCtx;
+  if (!ctx) {
+    ctx = new Ctor();
+    audioCtx = ctx;
   }
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume().catch(() => {});
+  if (ctx.state === 'suspended') {
+    ctx.resume().catch(() => {});
   }
-  return audioCtx;
+  return ctx;
 }
 
 /** 合成一个短促音 */

@@ -115,12 +115,13 @@ export function twoCushionPathClear(path: TwoCushionPath, obstacles: readonly Po
   return obstacles.every((o) => !polylineCircleHit(path, o, BALL_DIAMETER));
 }
 
-/** 撞点 P1、P2 是否在对应库边（内缩线）上且远离袋口 */
+/** 撞点 P1、P2 是否在对应库边（内缩线）上、坐标在球桌范围内、且远离袋口 */
 export function kickPointsValid(
   path: TwoCushionPath,
   cushions: [Cushion, Cushion],
 ): boolean {
   const eps = 1;
+  /* P 必须落在库边线上 */
   const onLine = (p: Point, cushion: Cushion): boolean => {
     const line = cushionLine(cushion);
     switch (cushion) {
@@ -132,9 +133,22 @@ export function kickPointsValid(
         return Math.abs(p.x - line) <= eps;
     }
   };
+  /* 沿库边方向的坐标必须在球桌范围内（内缩），否则撞点落到球桌外 */
+  const inRange = (p: Point, cushion: Cushion): boolean => {
+    switch (cushion) {
+      case 'top':
+      case 'bottom':
+        return p.x >= RAIL_CENTER_INSET && p.x <= TABLE_W - RAIL_CENTER_INSET;
+      case 'left':
+      case 'right':
+        return p.y >= RAIL_CENTER_INSET && p.y <= TABLE_H - RAIL_CENTER_INSET;
+    }
+  };
   return (
     onLine(path[1], cushions[0]) &&
+    inRange(path[1], cushions[0]) &&
     onLine(path[2], cushions[1]) &&
+    inRange(path[2], cushions[1]) &&
     awayFromPockets(path[1]) &&
     awayFromPockets(path[2])
   );
