@@ -19,9 +19,6 @@ export type PickPointCallback = (pt: Point) => void;
 /** 点击热区沿库边法线方向的容错厚度（像素） */
 const HIT_BAND = 46;
 
-/** 当前撞库边高亮带宽度（像素） */
-const HIGHLIGHT_WIDTH = 6;
-
 /** 画布设计尺寸（含库边） */
 const DESIGN_W = TABLE_W + RAIL_WIDTH * 2;
 const DESIGN_H = TABLE_H + RAIL_WIDTH * 2;
@@ -111,33 +108,38 @@ export class TableApp {
     this.hitLayer.interactiveChildren = enabled;
   }
 
-  /** 渲染一道题：放置母球 / 目标球 / 障碍球，高亮第一库，建立热区 */
+  /** 渲染一道题：放置母球 / 目标球 / 多个障碍球，4 库均建立热区（自由选库） */
   renderQuestion(q: Question): void {
     this.clearTrack();
     this.ballLayer.removeChildren();
     this.cueBall = this.makeBall(q.cueBall, COLORS.cueBall, 0x999999);
     const targetBall = this.makeBall(q.targetBall, COLORS.targetBall, 0xb45309);
-    const obstacle = this.makeBall(q.obstacle, COLORS.obstacle, 0x374151);
-    this.ballLayer.addChild(this.cueBall, targetBall, obstacle);
-
-    this.drawHighlight(q.cushions[0]);
-    this.setupHitArea(q.cushions[0]);
+    this.ballLayer.addChild(this.cueBall, targetBall);
+    for (const o of q.obstacles) {
+      this.ballLayer.addChild(this.makeBall(o, COLORS.obstacle, 0x374151));
+    }
+    this.highlightLayer.removeChildren();
+    this.setupAllCushionHitAreas();
   }
 
-  /** 播放命中动画：绿色实线轨迹 + 母球沿正确路径滑行 */
+  /** 播放命中动画：绿色实线轨迹 + 母球沿正确路径滑行 + 目标球波纹 */
   playCorrect(path: Point[], onDone: () => void): void {
     this.clearTrack();
     this.trackLayer.addChild(this.drawPath(path, COLORS.trackCorrect, 0.85, false));
-    this.runAnim(path, onDone);
+    this.runAnim(path, () => {
+      this.rippleEffect(path[path.length - 1], COLORS.ripple);
+      onDone();
+    });
   }
 
   /**
-   * 播放错误动画：先画红色虚线用户路线 + 母球沿之滑行，
+   * 播放错误动画：先画红色虚线用户路线 + 用户撞点标记 + 母球沿之滑行，
    * 完成后叠加绿色实线正确轨迹
    */
   playWrong(userPath: Point[], realPath: Point[], onDone: () => void): void {
     this.clearTrack();
     this.trackLayer.addChild(this.drawPath(userPath, COLORS.trackWrong, 0.6, true));
+    this.markPoint(userPath[userPath.length - 1], COLORS.userMark);
     this.runAnim(userPath, () => {
       this.trackLayer.addChild(this.drawPath(realPath, COLORS.trackCorrect, 0.85, false));
       onDone();
@@ -216,61 +218,73 @@ export class TableApp {
     this.tableLayer.addChild(g);
   }
 
-  /** 高亮当前第一库边（金色带） */
-  private drawHighlight(cushion: Cushion): void {
-    this.highlightLayer.removeChildren();
-    const g = new Graphics();
-    const fill = { color: COLORS.cushionHighlight, alpha: 0.65 };
-    switch (cushion) {
-      case 'top':
-        g.rect(0, 0, TABLE_W, HIGHLIGHT_WIDTH).fill(fill);
-        break;
-      case 'bottom':
-        g.rect(0, TABLE_H - HIGHLIGHT_WIDTH, TABLE_W, HIGHLIGHT_WIDTH).fill(fill);
-        break;
-      case 'left':
-        g.rect(0, 0, HIGHLIGHT_WIDTH, TABLE_H).fill(fill);
-        break;
-      case 'right':
-        g.rect(TABLE_W - HIGHLIGHT_WIDTH, 0, HIGHLIGHT_WIDTH, TABLE_H).fill(fill);
-        break;
-    }
-    this.highlightLayer.addChild(g);
-  }
-
-  /** 在第一库上建立点击热区 */
-  private setupHitArea(cushion: Cushion): void {
+  /** 在 4 条库边均建立点击热区（自由选库模式：用户自行判断撞哪条库） */
+  private setupAllCushionHitAreas(): void {
     this.hitLayer.removeChildren();
-    const area = new Graphics();
-    const fill = { color: 0xffffff, alpha: 0 };
-    switch (cushion) {
-      case 'top':
-        area.rect(0, 0, TABLE_W, HIT_BAND).fill(fill);
-        break;
-      case 'bottom':
-        area.rect(0, TABLE_H - HIT_BAND, TABLE_W, HIT_BAND).fill(fill);
-        break;
-      case 'left':
-        area.rect(0, 0, HIT_BAND, TABLE_H).fill(fill);
-        break;
-      case 'right':
-        area.rect(TABLE_W - HIT_BAND, 0, HIT_BAND, TABLE_H).fill(fill);
-        break;
+    const cushions: readonly Cushion[] = ['top', 'bottom', 'left', 'right'];
+    for (const cushion of cushions) {
+      const area = new Graphics();
+      const fill = { color: 0xffffff, alpha: 0 };
+      switch (cushion) {
+        case 'top':
+          area.rect(0, 0, TABLE_W, HIT_BAND).fill(fill);
+          break;
+        case 'bottom':
+          area.rect(0, TABLE_H - HIT_BAND, TABLE_W, HIT_BAND).fill(fill);
+          break;
+        case 'left':
+          area.rect(0, 0, HIT_BAND, TABLE_H).fill(fill);
+          break;
+        case 'right':
+          area.rect(TABLE_W - HIT_BAND, 0, HIT_BAND, TABLE_H).fill(fill);
+          break;
+      }
+      area.eventMode = 'static';
+      area.cursor = 'crosshair';
+      area.on('pointerdown', (e: FederatedPointerEvent) => {
+        /* event.global 是 stage 坐标，需减去 world 偏移得到台呢内坐标 */
+        const wx = e.global.x - RAIL_WIDTH;
+        const wy = e.global.y - RAIL_WIDTH;
+        this.onPick?.(projectToCushion({ x: wx, y: wy }, cushion));
+      });
+      this.hitLayer.addChild(area);
     }
-    area.eventMode = 'static';
-    area.cursor = 'crosshair';
-    area.on('pointerdown', (e: FederatedPointerEvent) => {
-      /* event.global 是 stage 坐标，需减去 world 偏移得到台呢内坐标 */
-      const wx = e.global.x - RAIL_WIDTH;
-      const wy = e.global.y - RAIL_WIDTH;
-      this.onPick?.(projectToCushion({ x: wx, y: wy }, cushion));
-    });
-    this.hitLayer.addChild(area);
     /* 默认禁用，等进入 Wait_Input 状态再开启 */
     this.hitLayer.interactiveChildren = false;
   }
 
   /* ---------- 私有：球与轨迹 ---------- */
+
+  /** 命中波纹：在指定位置画扩散淡出的金色圆环 */
+  private rippleEffect(pos: Point, color: number): void {
+    const ripple = new Graphics();
+    ripple.position.set(pos.x, pos.y);
+    this.trackLayer.addChild(ripple);
+    let r = BALL_RADIUS;
+    let alpha = 1;
+    const animate = (): void => {
+      if (ripple.destroyed) {
+        this.app.ticker.remove(animate);
+        return;
+      }
+      ripple.clear();
+      ripple.circle(0, 0, r).stroke({ color, width: 2, alpha });
+      r += 1.6;
+      alpha -= 0.04;
+      if (alpha <= 0) {
+        this.app.ticker.remove(animate);
+        ripple.destroy();
+      }
+    };
+    this.app.ticker.add(animate);
+  }
+
+  /** 静态标记一个点（红色圆环，用于用户错误撞点） */
+  private markPoint(pos: Point, color: number): void {
+    const g = new Graphics();
+    g.circle(pos.x, pos.y, BALL_RADIUS + 3).stroke({ color, width: 2, alpha: 0.85 });
+    this.trackLayer.addChild(g);
+  }
 
   /** 创建球 Graphics（本地圆心在原点，用 position 定位） */
   private makeBall(pos: Point, color: number, strokeColor: number): Graphics {

@@ -19,8 +19,14 @@ export type GameStateName =
   | 'Animation'
   | 'Settle';
 
-/** 训练模式（Phase 1 仅实现 advanced） */
+/** 训练模式（Phase 3 扩展为多模式） */
 export type Mode = 'novice' | 'advanced' | 'master' | 'time';
+
+/** 2 库路径固定 4 点元组：[母球, 第一库撞点, 第二库撞点, 目标球] */
+export type TwoCushionPath = [Point, Point, Point, Point];
+
+/** 1 库路径固定 3 点元组：[母球, 撞点, 目标球] */
+export type OneCushionPath = [Point, Point, Point];
 
 /**
  * 2 库 kick 题面
@@ -32,12 +38,12 @@ export interface Question {
   cueBall: Point;
   /** 目标球坐标 */
   targetBall: Point;
-  /** 障碍球坐标（不可击打，用于挡路） */
-  obstacle: Point;
+  /** 障碍球坐标列表（不可击打，2-5 个组合挡路） */
+  obstacles: Point[];
   /** 指定的两库顺序，如 ['top', 'left'] */
   cushions: [Cushion, Cushion];
   /** 正确路径 [Cue, P1, P2, Target]（镜像展开法计算） */
-  realPath: Point[];
+  realPath: TwoCushionPath;
 }
 
 /** 答题结果 */
@@ -51,7 +57,9 @@ export interface AnswerResult {
   /** 用户折线（Cue → userPoint） */
   userPath: Point[];
   /** 正确折线（Cue → P1 → P2 → Target） */
-  realPath: Point[];
+  realPath: TwoCushionPath;
   /** 本题指定的两库顺序 */
   cushions: [Cushion, Cushion];
+  /** 误差距离（像素） */
+  errorDistance: number;
 }

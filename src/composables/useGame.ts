@@ -1,9 +1,12 @@
-import { reactive, shallowRef } from 'vue';
+import { reactive, shallowRef, watch } from 'vue';
 import { StateMachine } from '../game/stateMachine';
 import { generateTwoCushion } from '../game/modes';
 import { isHit } from '../game/diamondSystem';
-import { HIT_TOLERANCE_PX, ADVANCED_PASS_COMBO } from '../game/constants';
+import { distance } from '../game/geometry';
+import { ADVANCED_PASS_COMBO, DIFFICULTY, type Difficulty } from '../game/constants';
 import { getBestScore, saveBestScore } from '../storage/localStorage';
+import { loadSettings, saveSettings, type UserSettings } from '../storage/settingsStorage';
+import { useFeedback } from './useFeedback';
 import type { TableApp } from '../game/TableApp';
 import type { AnswerResult, Cushion, GameStateName, Point, Question } from '../game/types';
 
@@ -23,6 +26,8 @@ export interface GameReactiveState {
   formula: { cushions: [Cushion, Cushion] } | null;
   /** 是否已通关 */
   passed: boolean;
+  /** 当前题开始时间戳（用于复盘耗时统计） */
+  attemptStartedAt: number;
 }
 
 /** 单题命中得分 */
@@ -31,10 +36,16 @@ const SCORE_PER_HIT = 10;
 /**
  * 游戏主控 composable
  *
- * 桥接"响应式状态 / 状态机 / TableApp 渲染层 / Local Storage"。
+ * 桥接"响应式状态 / 状态机 / TableApp 渲染层 / 反馈 / Local Storage"。
  * 训练模式：2 库 kick（绕障碍球击目标球）。
  */
 export function useGame() {
+  const settings = reactive<UserSettings>(loadSettings());
+  const feedback = useFeedback(settings);
+
+  /* settings 变更自动持久化 */
+  watch(settings, (s) => saveSettings({ ...s }), { deep: true });
+
   const state = reactive<GameReactiveState>({
     phase: 'Init',
     score: 0,
@@ -43,6 +54,7 @@ export function useGame() {
     lastResult: null,
     formula: null,
     passed: false,
+    attemptStartedAt: 0,
   });
 
   const sm = new StateMachine();
@@ -75,6 +87,7 @@ export function useGame() {
     currentQuestion = generateTwoCushion();
     state.formula = { cushions: currentQuestion.cushions };
     state.lastResult = null;
+    state.attemptStartedAt = Date.now();
 
     const t = tableRef.value;
     if (t) {
@@ -98,7 +111,8 @@ export function useGame() {
 
     const q = currentQuestion;
     const realPoint = q.realPath[1];
-    const hit = isHit(userPoint, realPoint, HIT_TOLERANCE_PX);
+    const tolerance = DIFFICULTY[settings.difficulty];
+    const hit = isHit(userPoint, realPoint, tolerance);
     const userPath: Point[] = [q.cueBall, userPoint];
 
     state.lastResult = {
@@ -108,14 +122,17 @@ export function useGame() {
       userPath,
       realPath: q.realPath,
       cushions: q.cushions,
+      errorDistance: Math.round(distance(userPoint, realPoint)),
     };
 
     if (hit) {
       state.score += SCORE_PER_HIT;
       state.combo += 1;
+      feedback.trigger('hit');
       t.playCorrect(q.realPath, settle);
     } else {
       state.combo = 0;
+      feedback.trigger('miss');
       t.playWrong(userPath, q.realPath, settle);
     }
   }
@@ -129,8 +146,9 @@ export function useGame() {
     if (saveBestScore(state.score)) {
       state.bestScore = state.score;
     }
-    if (state.combo >= ADVANCED_PASS_COMBO) {
+    if (state.combo >= ADVANCED_PASS_COMBO && !state.passed) {
       state.passed = true;
+      feedback.trigger('pass');
     }
   }
 
@@ -142,10 +160,18 @@ export function useGame() {
     next();
   }
 
+  /** 切换难度（影响命中容差） */
+  function setDifficulty(d: Difficulty): void {
+    settings.difficulty = d;
+  }
+
   return {
     state,
+    settings,
     setTable,
     start,
     gotoNext,
+    setDifficulty,
+    unlockAudio: feedback.unlock,
   };
 }

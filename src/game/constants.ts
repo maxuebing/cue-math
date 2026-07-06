@@ -1,5 +1,5 @@
 /**
- * 游戏常量：中式八球桌（竖向）尺寸、袋口、颗星、配色、动画、通关条件
+ * 游戏常量：中式八球桌（竖向）尺寸、袋口、颗星、配色、动画、通关条件、难度
  *
  * 竖向布局：短边为宽（左右库间距），长边为高（上下库间距），2:1 比例。
  * 颗星训练：母球 2 库 kick（绕障碍球击目标球）。
@@ -15,22 +15,43 @@ export const TABLE_H = 720;
 export const RAIL_WIDTH = 24;
 
 /** 角袋半径（像素） */
-export const CORNER_POCKET_R = 16;
+export const CORNER_POCKET_R = 22;
 
 /** 中袋半径（像素，中八中袋略大） */
-export const MID_POCKET_R = 18;
+export const MID_POCKET_R = 26;
 
 /** 球半径（像素） */
-export const BALL_RADIUS = 9;
+export const BALL_RADIUS = 14;
+
+/** 球直径 */
+export const BALL_DIAMETER = BALL_RADIUS * 2;
+
+/** 球-球 / 球-路径最小安全间距（球径 + 余量），用于题面合法性判断 */
+export const BALL_COLLISION_CLEARANCE = BALL_DIAMETER + 2;
+
+/** 球心可达边界相对库边线的内缩量（= 球半径，使球体贴库而非压入库边） */
+export const RAIL_CENTER_INSET = BALL_RADIUS;
 
 /** 每条库边的颗星点数量（中八标准 6 颗） */
 export const DIAMONDS_PER_SIDE = 6;
 
-/** 命中容差：用户第一库点击点与正确点的距离阈值（像素） */
+/** 默认命中容差（normal 难度，像素） */
 export const HIT_TOLERANCE_PX = 18;
 
-/** 障碍球与路径的安全距离（像素），用于题面合法性判断 */
-export const OBSTACLE_CLEARANCE = BALL_RADIUS * 2 + 2;
+/**
+ * 难度分级：值为第一库撞点的命中容差（像素），越大越易命中
+ */
+export const DIFFICULTY = {
+  /** 简单：容差大，适合新手 */
+  easy: 28,
+  /** 进阶：默认 */
+  normal: HIT_TOLERANCE_PX,
+  /** 大师：容差小，要求精准 */
+  hard: 12,
+} as const;
+
+/** 难度名 */
+export type Difficulty = keyof typeof DIFFICULTY;
 
 /**
  * 中式八球配色（蓝色比赛台呢 + 6 袋口 + 金色颗星）
@@ -61,6 +82,10 @@ export const COLORS = {
   trackWrong: 0xef4444,
   /** 当前撞库边高亮（金） */
   cushionHighlight: 0xd4af37,
+  /** 命中波纹（金） */
+  ripple: 0xfde68a,
+  /** 用户错误撞点标记（红） */
+  userMark: 0xef4444,
 } as const;
 
 /** 母球沿轨迹移动速度（像素 / 秒） */
@@ -71,3 +96,6 @@ export const ADVANCED_PASS_COMBO = 15;
 
 /** Local Storage 键名 */
 export const LS_KEY_BEST_SCORE = 'cuemath.bestScore';
+
+/** 用户设置持久化 key（音效 / 震动 / 难度） */
+export const LS_KEY_SETTINGS = 'cuemath.settings.v1';
