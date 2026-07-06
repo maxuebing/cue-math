@@ -6,7 +6,6 @@ import {
   CORNER_POCKET_R,
   MID_POCKET_R,
   BALL_RADIUS,
-  DIAMONDS_PER_SIDE,
   COLORS,
   ANIM_SPEED,
 } from './constants';
@@ -199,18 +198,18 @@ export class TableApp {
     this.tableLayer.addChild(g);
   }
 
-  /** 每条库边 6 颗星（长边避开中袋） */
+  /** 颗星点：短边每边 3 颗（1/4、2/4、3/4），长边每边 6 颗（中袋两侧各 3） */
   private drawDiamonds(): void {
     const g = new Graphics();
-    /* 顶 / 底短边：均匀 6 颗 */
-    for (let i = 1; i <= DIAMONDS_PER_SIDE; i++) {
-      const x = (TABLE_W * i) / (DIAMONDS_PER_SIDE + 1);
+    /* 顶 / 底短边：3 颗 */
+    for (let i = 1; i <= 3; i++) {
+      const x = (TABLE_W * i) / 4;
       g.circle(x, 0, 3).fill(COLORS.diamond);
       g.circle(x, TABLE_H, 3).fill(COLORS.diamond);
     }
-    /* 左 / 右长边：避开中袋（y = TABLE_H/2），上下各 3 颗 */
-    const ratios = [1 / 8, 2 / 8, 3 / 8, 5 / 8, 6 / 8, 7 / 8];
-    for (const r of ratios) {
+    /* 左 / 右长边：6 颗（避开中袋 4/8，上下各 3） */
+    const longRatios = [1 / 8, 2 / 8, 3 / 8, 5 / 8, 6 / 8, 7 / 8];
+    for (const r of longRatios) {
       const y = TABLE_H * r;
       g.circle(0, y, 3).fill(COLORS.diamond);
       g.circle(TABLE_W, y, 3).fill(COLORS.diamond);
