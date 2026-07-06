@@ -1,0 +1,1887 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="《台球颗星公式训练》H5 应用 产品需求文档（PRD）— CueMath">
+    <meta name="author" content="CueMath Team">
+    <title>CueMath · 台球颗星公式训练 产品需求文档（PRD v1.0）</title>
+    <!-- 内联 SVG favicon（台球主题），避免浏览器请求 favicon.ico 产生 404 -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%230E5C3A'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23F5E6B8'/%3E%3C/svg%3E">
+    <style>
+        /* ============================================================
+         * CueMath PRD 视觉系统（台球主题）
+         * 主色：台呢绿   辅色：金色点缀
+         * ============================================================ */
+        :root {
+            --felt-green: #0E5C3A;
+            --felt-deep: #0A3F2A;
+            --felt-light: #1A7A52;
+            --gold: #D4AF37;
+            --gold-soft: #F5E6B8;
+            --gold-deep: #A8862A;
+            --track-correct: #22C55E;
+            --track-wrong: #EF4444;
+            --ink: #1A1A1A;
+            --ink-soft: #4A4A4A;
+            --ink-muted: #8A8A8A;
+            --paper: #F8F6F0;
+            --paper-warm: #FDFBF3;
+            --card: #FFFFFF;
+            --line: #E5E2D6;
+            --line-strong: #C9C4B0;
+            --shadow-sm: 0 1px 3px rgba(14, 92, 58, 0.08);
+            --shadow-md: 0 4px 16px rgba(14, 92, 58, 0.12);
+            --shadow-lg: 0 12px 32px rgba(14, 92, 58, 0.18);
+            --radius: 10px;
+            --radius-sm: 6px;
+            --radius-lg: 16px;
+        }
+
+        /* ============================================================
+         * 基础重置与排版
+         * ============================================================ */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 24px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC",
+                "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-size: 15px;
+            line-height: 1.75;
+            color: var(--ink);
+            background-color: var(--paper);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            /* 兜底：防止任何子元素（如 fixed 抽屉）引发横向滚动 */
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4 {
+            font-weight: 700;
+            line-height: 1.35;
+            color: var(--felt-deep);
+            margin: 0 0 0.6em;
+        }
+
+        p {
+            margin: 0 0 1em;
+        }
+
+        a {
+            color: var(--felt-green);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        a:hover {
+            color: var(--gold-deep);
+        }
+
+        ul, ol {
+            padding-left: 1.4em;
+            margin: 0 0 1em;
+        }
+
+        li {
+            margin-bottom: 0.4em;
+        }
+
+        code {
+            font-family: "SF Mono", "JetBrains Mono", Consolas, Menlo, monospace;
+            background-color: var(--gold-soft);
+            color: var(--felt-deep);
+            padding: 0.1em 0.4em;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background-color: var(--felt-deep);
+            color: var(--gold-soft);
+            padding: 16px 20px;
+            border-radius: var(--radius);
+            overflow-x: auto;
+            margin: 0 0 1.2em;
+            font-size: 0.88em;
+            line-height: 1.6;
+        }
+
+        pre code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+        }
+
+        strong {
+            color: var(--felt-deep);
+            font-weight: 700;
+        }
+
+        /* ============================================================
+         * 阅读进度条
+         * ============================================================ */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            width: 0%;
+            background: linear-gradient(90deg, var(--gold), var(--felt-light));
+            z-index: 1000;
+            transition: width 0.1s ease-out;
+            box-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
+        }
+
+        /* ============================================================
+         * Hero 横幅
+         * ============================================================ */
+        .hero {
+            position: relative;
+            background: linear-gradient(135deg, var(--felt-deep) 0%, var(--felt-green) 60%, var(--felt-light) 100%);
+            color: #fff;
+            padding: 56px 32px 48px;
+            overflow: hidden;
+            border-bottom: 4px solid var(--gold);
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(circle at 20% 30%, rgba(255,255,255,0.08) 0, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(212,175,55,0.12) 0, transparent 40%);
+            pointer-events: none;
+        }
+
+        .hero-inner {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .hero-text .eyebrow {
+            display: inline-block;
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-bottom: 18px;
+            font-weight: 600;
+        }
+
+        .hero-text h1 {
+            color: #fff;
+            font-size: 36px;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .hero-text .subtitle {
+            font-size: 16px;
+            color: rgba(255,255,255,0.85);
+            margin-bottom: 20px;
+            max-width: 560px;
+        }
+
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.75);
+        }
+
+        .hero-meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .hero-meta .dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--gold);
+            display: inline-block;
+        }
+
+        .hero-art {
+            width: 280px;
+            height: 180px;
+        }
+
+        /* ============================================================
+         * 主布局：侧边目录 + 正文
+         * ============================================================ */
+        .layout {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px 64px;
+            display: grid;
+            grid-template-columns: 232px 1fr;
+            gap: 40px;
+        }
+
+        /* ============================================================
+         * 侧边目录
+         * ============================================================ */
+        .toc {
+            position: sticky;
+            top: 24px;
+            align-self: start;
+            max-height: calc(100vh - 48px);
+            overflow-y: auto;
+            padding: 20px 18px;
+            background: var(--card);
+            border-radius: var(--radius);
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .toc-title {
+            font-size: 12px;
+            letter-spacing: 1.5px;
+            color: var(--gold-deep);
+            font-weight: 700;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .toc ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .toc li {
+            margin-bottom: 2px;
+        }
+
+        .toc a {
+            display: block;
+            padding: 7px 10px;
+            color: var(--ink-soft);
+            font-size: 13.5px;
+            border-radius: var(--radius-sm);
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+            line-height: 1.4;
+        }
+
+        .toc a:hover {
+            background: var(--paper-warm);
+            color: var(--felt-green);
+        }
+
+        .toc a.active {
+            background: var(--gold-soft);
+            color: var(--felt-deep);
+            border-left-color: var(--gold);
+            font-weight: 600;
+        }
+
+        .toc .toc-num {
+            display: inline-block;
+            width: 22px;
+            color: var(--gold-deep);
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        /* ============================================================
+         * 正文：章节
+         * ============================================================ */
+        main.content {
+            min-width: 0;
+        }
+
+        section.section {
+            background: var(--card);
+            border-radius: var(--radius-lg);
+            padding: 32px 36px;
+            margin-bottom: 24px;
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow-sm);
+        }
+
+        section.section h2 {
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+            padding-bottom: 14px;
+            border-bottom: 2px solid var(--gold-soft);
+            position: relative;
+        }
+
+        section.section h2::before {
+            content: "";
+            display: inline-block;
+            width: 6px;
+            height: 24px;
+            background: linear-gradient(180deg, var(--gold), var(--felt-green));
+            border-radius: 3px;
+        }
+
+        section.section h2 .sec-num {
+            color: var(--gold-deep);
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        section.section h3 {
+            font-size: 17px;
+            color: var(--felt-green);
+            margin-top: 1.6em;
+            margin-bottom: 0.5em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        section.section h3::before {
+            content: "◉";
+            color: var(--gold);
+            font-size: 13px;
+        }
+
+        section.section h4 {
+            font-size: 15px;
+            color: var(--ink);
+            margin-top: 1.2em;
+            margin-bottom: 0.4em;
+        }
+
+        .lead {
+            color: var(--ink-soft);
+            font-size: 15px;
+            margin-bottom: 1.4em;
+        }
+
+        /* ============================================================
+         * 组件：标签 / 徽章 / 引用 / 提示框
+         * ============================================================ */
+        .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        .badge-gold {
+            background: var(--gold-soft);
+            color: var(--gold-deep);
+            border: 1px solid var(--gold);
+        }
+
+        .badge-green {
+            background: rgba(34, 197, 94, 0.15);
+            color: #15803d;
+            border: 1px solid var(--track-correct);
+        }
+
+        .badge-red {
+            background: rgba(239, 68, 68, 0.12);
+            color: #b91c1c;
+            border: 1px solid var(--track-wrong);
+        }
+
+        .badge-gray {
+            background: #EEE;
+            color: var(--ink-soft);
+            border: 1px solid var(--line);
+        }
+
+        .quote {
+            border-left: 4px solid var(--gold);
+            background: var(--paper-warm);
+            padding: 14px 18px;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            margin: 0 0 1.2em;
+            color: var(--ink-soft);
+            font-size: 14.5px;
+        }
+
+        .quote strong {
+            color: var(--felt-deep);
+        }
+
+        .callout {
+            background: linear-gradient(135deg, var(--gold-soft) 0%, var(--paper-warm) 100%);
+            border: 1px solid var(--gold);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin: 0 0 1.2em;
+            font-size: 14px;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            color: var(--felt-deep);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* ============================================================
+         * 表格
+         * ============================================================ */
+        .table-wrap {
+            overflow-x: auto;
+            margin: 0 0 1.2em;
+            border-radius: var(--radius);
+            border: 1px solid var(--line);
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 14px;
+            background: var(--card);
+            min-width: 480px;
+        }
+
+        th {
+            background: var(--felt-green);
+            color: #fff;
+            text-align: left;
+            padding: 12px 14px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 11px 14px;
+            border-top: 1px solid var(--line);
+            vertical-align: top;
+        }
+
+        tbody tr:nth-child(even) {
+            background: var(--paper-warm);
+        }
+
+        tbody tr:hover {
+            background: var(--gold-soft);
+        }
+
+        /* ============================================================
+         * 卡片网格（用户画像 / 指标 / 公式）
+         * ============================================================ */
+        .grid {
+            display: grid;
+            gap: 16px;
+            margin: 0 0 1.2em;
+        }
+
+        .grid-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .card-item {
+            background: var(--paper-warm);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            transition: all 0.2s;
+        }
+
+        .card-item:hover {
+            border-color: var(--gold);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .card-item .card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .card-item h4 {
+            margin: 0;
+            font-size: 15px;
+            color: var(--felt-deep);
+        }
+
+        .card-item p {
+            margin: 0;
+            font-size: 13.5px;
+            color: var(--ink-soft);
+            line-height: 1.65;
+        }
+
+        /* ============================================================
+         * 公式块
+         * ============================================================ */
+        .formula {
+            text-align: center;
+            background: var(--felt-deep);
+            color: var(--gold-soft);
+            padding: 22px;
+            border-radius: var(--radius);
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin: 0 0 1.2em;
+            font-family: "Georgia", "Times New Roman", serif;
+            border: 2px solid var(--gold);
+        }
+
+        .formula .var {
+            color: var(--gold);
+            font-size: 24px;
+        }
+
+        /* ============================================================
+         * Tab 切换（四模式）
+         * ============================================================ */
+        .tab-group {
+            margin: 0 0 1.2em;
+        }
+
+        .tab-nav {
+            display: flex;
+            gap: 6px;
+            border-bottom: 2px solid var(--line);
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ink-muted);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .tab-btn:hover {
+            color: var(--felt-green);
+        }
+
+        .tab-btn.active {
+            color: var(--felt-deep);
+            border-bottom-color: var(--gold);
+        }
+
+        .tab-panel {
+            display: none;
+            background: var(--paper-warm);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 22px 24px;
+            border-left: 4px solid var(--gold);
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .tab-panel h4 {
+            margin-top: 0;
+            color: var(--felt-deep);
+            font-size: 16px;
+        }
+
+        .tab-panel dl {
+            margin: 0;
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 8px 16px;
+            font-size: 14px;
+        }
+
+        .tab-panel dt {
+            color: var(--gold-deep);
+            font-weight: 700;
+        }
+
+        .tab-panel dd {
+            margin: 0;
+            color: var(--ink-soft);
+        }
+
+        /* ============================================================
+         * 可折叠（验收标准 / 术语表）
+         * ============================================================ */
+        details {
+            background: var(--paper-warm);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 0;
+            margin-bottom: 10px;
+        }
+
+        details[open] {
+            border-color: var(--gold);
+        }
+
+        summary {
+            padding: 14px 18px;
+            font-weight: 600;
+            color: var(--felt-deep);
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14.5px;
+        }
+
+        summary::-webkit-details-marker {
+            display: none;
+        }
+
+        summary::after {
+            content: "▸";
+            color: var(--gold);
+            font-size: 18px;
+            transition: transform 0.2s;
+        }
+
+        details[open] summary::after {
+            transform: rotate(90deg);
+        }
+
+        details .details-body {
+            padding: 0 18px 16px;
+            font-size: 14px;
+            color: var(--ink-soft);
+        }
+
+        /* ============================================================
+         * 错题矩阵热力图
+         * ============================================================ */
+        .matrix {
+            display: grid;
+            grid-template-columns: 80px repeat(6, 1fr);
+            gap: 3px;
+            background: var(--line);
+            padding: 3px;
+            border-radius: var(--radius);
+            margin: 0 0 1.2em;
+            font-size: 11.5px;
+        }
+
+        .matrix .cell {
+            background: var(--card);
+            padding: 10px 4px;
+            text-align: center;
+            border-radius: 3px;
+            color: var(--ink-soft);
+            font-weight: 600;
+            min-height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .matrix .cell.head {
+            background: var(--felt-green);
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .matrix .cell.corner {
+            background: var(--felt-deep);
+            color: var(--gold-soft);
+        }
+
+        .matrix-legend {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--ink-muted);
+            margin-bottom: 1.2em;
+        }
+
+        .matrix-legend .gradient {
+            width: 140px;
+            height: 12px;
+            background: linear-gradient(90deg, #FDFBF3, var(--gold-soft), var(--gold), var(--gold-deep), var(--felt-deep));
+            border-radius: 6px;
+            border: 1px solid var(--line);
+        }
+
+        /* ============================================================
+         * 分层架构图
+         * ============================================================ */
+        .arch {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin: 0 0 1.2em;
+        }
+
+        .arch-layer {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 14px;
+            align-items: center;
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-left: 5px solid var(--gold);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .arch-layer .layer-name {
+            font-weight: 700;
+            color: var(--felt-deep);
+            font-size: 14.5px;
+        }
+
+        .arch-layer .layer-name small {
+            display: block;
+            color: var(--ink-muted);
+            font-weight: 400;
+            font-size: 11px;
+            margin-top: 2px;
+        }
+
+        .arch-layer .layer-tech {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .arch-layer .layer-tech .pill {
+            background: var(--gold-soft);
+            color: var(--gold-deep);
+            padding: 4px 12px;
+            border-radius: 14px;
+            font-size: 12.5px;
+            font-weight: 600;
+            border: 1px solid var(--gold);
+        }
+
+        .arch-arrow {
+            text-align: center;
+            color: var(--gold);
+            font-size: 18px;
+            line-height: 1;
+            margin: -2px 0;
+        }
+
+        /* ============================================================
+         * 时间线（Phase 路线）
+         * ============================================================ */
+        .timeline {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin: 0 0 1.2em;
+        }
+
+        .phase-card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 22px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .phase-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .phase-card.p1::before { background: var(--track-correct); }
+        .phase-card.p2::before { background: var(--gold); }
+        .phase-card.p3::before { background: var(--felt-green); }
+
+        .phase-tag {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--gold-deep);
+            margin-bottom: 6px;
+        }
+
+        .phase-card h4 {
+            font-size: 18px;
+            color: var(--felt-deep);
+            margin: 0 0 10px;
+        }
+
+        .phase-card ul {
+            padding-left: 1.1em;
+            font-size: 13.5px;
+            color: var(--ink-soft);
+            margin: 0;
+        }
+
+        .phase-card .phase-goal {
+            background: var(--paper-warm);
+            border-radius: var(--radius-sm);
+            padding: 8px 12px;
+            font-size: 12.5px;
+            color: var(--felt-deep);
+            margin-top: 12px;
+            font-weight: 600;
+        }
+
+        /* ============================================================
+         * SVG 插图通用
+         * ============================================================ */
+        .fig {
+            margin: 0 0 1.4em;
+            background: var(--paper-warm);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .fig svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .fig-caption {
+            font-size: 12.5px;
+            color: var(--ink-muted);
+            margin-top: 12px;
+            font-style: italic;
+        }
+
+        /* ============================================================
+         * 移动端目录按钮
+         * ============================================================ */
+        .toc-toggle {
+            display: none;
+            position: fixed;
+            right: 18px;
+            bottom: 18px;
+            z-index: 999;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: var(--felt-green);
+            color: var(--gold-soft);
+            border: 2px solid var(--gold);
+            font-size: 22px;
+            cursor: pointer;
+            box-shadow: var(--shadow-lg);
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ============================================================
+         * 页脚
+         * ============================================================ */
+        footer {
+            background: var(--felt-deep);
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+            padding: 28px 24px;
+            font-size: 13px;
+            border-top: 4px solid var(--gold);
+        }
+
+        footer a {
+            color: var(--gold);
+        }
+
+        footer .footer-meta {
+            margin-top: 8px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+        }
+
+        /* ============================================================
+         * 响应式：≤ 900px 折叠侧边目录
+         * ============================================================ */
+        @media (max-width: 900px) {
+            .hero {
+                padding: 40px 20px 32px;
+            }
+
+            .hero-inner {
+                grid-template-columns: 1fr;
+                gap: 18px;
+            }
+
+            .hero-text h1 {
+                font-size: 26px;
+            }
+
+            .hero-art {
+                width: 100%;
+                max-width: 260px;
+                height: 150px;
+            }
+
+            .layout {
+                grid-template-columns: 1fr;
+                padding: 20px 16px 48px;
+                gap: 20px;
+            }
+
+            .toc {
+                position: fixed;
+                top: 0;
+                right: 0;
+                width: 264px;
+                height: 100vh;
+                max-height: 100vh;
+                border-radius: 0;
+                z-index: 998;
+                /* 用 transform 隐藏抽屉，避免 fixed 元素溢出引发横向滚动 */
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+                box-shadow: var(--shadow-lg);
+                padding-top: 60px;
+            }
+
+            .toc.open {
+                transform: translateX(0);
+            }
+
+            .toc-toggle {
+                display: flex;
+            }
+
+            /* 移动端表格优先自适应视口宽度，避免 min-width 撑出横向滚动 */
+            table {
+                min-width: 0;
+            }
+
+            section.section {
+                padding: 22px 18px;
+            }
+
+            section.section h2 {
+                font-size: 20px;
+            }
+
+            .grid-3, .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .timeline {
+                grid-template-columns: 1fr;
+            }
+
+            .tab-panel dl {
+                grid-template-columns: 1fr;
+                gap: 4px 0;
+            }
+
+            .tab-panel dt {
+                margin-top: 8px;
+            }
+
+            .matrix {
+                grid-template-columns: 56px repeat(6, 1fr);
+                font-size: 10px;
+            }
+
+            .arch-layer {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部阅读进度条 -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- Hero 横幅 -->
+    <header class="hero">
+        <div class="hero-inner">
+            <div class="hero-text">
+                <span class="eyebrow">PRODUCT REQUIREMENTS DOCUMENT</span>
+                <h1>CueMath · 台球颗星公式训练</h1>
+                <p class="subtitle">一款面向移动端的高流畅度、强反馈 H5 训练应用，帮助玩家通过碎片化时间形成颗星公式（Diamond System）的心算肌肉记忆。</p>
+                <div class="hero-meta">
+                    <span><span class="dot"></span>版本 v1.0</span>
+                    <span><span class="dot"></span>状态：评审中</span>
+                    <span><span class="dot"></span>目标平台：移动端 H5 / 微信小程序</span>
+                    <span><span class="dot"></span>2026-07-05</span>
+                </div>
+            </div>
+            <div class="hero-art">
+                <!-- Hero 球桌示意图：母球 → 金色虚线轨迹 → 第一库瞄准点 → 目标球 -->
+                <svg viewBox="0 0 280 180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="台球颗星轨迹示意图">
+                    <!-- 球桌台呢背景 -->
+                    <rect x="10" y="20" width="260" height="140" rx="6" fill="#0E5C3A" stroke="#D4AF37" stroke-width="2"/>
+                    <!-- 库边颗星刻度点（上下边各 6 个） -->
+                    <g fill="#F5E6B8" opacity="0.7">
+                        <circle cx="50" cy="20" r="2"/>
+                        <circle cx="90" cy="20" r="2"/>
+                        <circle cx="130" cy="20" r="2"/>
+                        <circle cx="170" cy="20" r="2"/>
+                        <circle cx="210" cy="20" r="2"/>
+                        <circle cx="250" cy="20" r="2"/>
+                        <circle cx="50" cy="160" r="2"/>
+                        <circle cx="90" cy="160" r="2"/>
+                        <circle cx="130" cy="160" r="2"/>
+                        <circle cx="170" cy="160" r="2"/>
+                        <circle cx="210" cy="160" r="2"/>
+                        <circle cx="250" cy="160" r="2"/>
+                    </g>
+                    <!-- 第一库瞄准点高亮（顶边某颗星） -->
+                    <circle cx="170" cy="20" r="6" fill="none" stroke="#D4AF37" stroke-width="2"/>
+                    <text x="170" y="14" font-size="9" fill="#D4AF37" text-anchor="middle" font-family="monospace">C</text>
+                    <!-- 母球 A（白色） -->
+                    <circle cx="60" cy="120" r="9" fill="#FFFFFF" stroke="#aaa" stroke-width="1"/>
+                    <text x="60" y="142" font-size="10" fill="#F5E6B8" text-anchor="middle" font-family="monospace">A</text>
+                    <!-- 目标球 B（红色） -->
+                    <circle cx="220" cy="110" r="9" fill="#E8472B" stroke="#fff" stroke-width="1"/>
+                    <text x="220" y="132" font-size="10" fill="#F5E6B8" text-anchor="middle" font-family="monospace">B</text>
+                    <!-- 轨迹：A → 第一库 C → B（金色虚线） -->
+                    <line x1="60" y1="120" x2="170" y2="20" stroke="#D4AF37" stroke-width="2" stroke-dasharray="5,3" opacity="0.9"/>
+                    <line x1="170" y1="20" x2="220" y2="110" stroke="#22C55E" stroke-width="2" stroke-dasharray="5,3" opacity="0.9"/>
+                </svg>
+            </div>
+        </div>
+    </header>
+
+    <!-- 移动端目录悬浮按钮 -->
+    <button class="toc-toggle" id="tocToggle" aria-label="打开目录">☰</button>
+
+    <!-- 主布局 -->
+    <div class="layout">
+        <!-- 侧边目录导航 -->
+        <aside class="toc" id="toc">
+            <div class="toc-title">📑 文档目录</div>
+            <ul>
+                <li><a href="#sec-1"><span class="toc-num">01</span>产品概述</a></li>
+                <li><a href="#sec-2"><span class="toc-num">02</span>目标用户与场景</a></li>
+                <li><a href="#sec-3"><span class="toc-num">03</span>核心功能需求</a></li>
+                <li><a href="#sec-4"><span class="toc-num">04</span>交互与 UI 规范</a></li>
+                <li><a href="#sec-5"><span class="toc-num">05</span>技术架构</a></li>
+                <li><a href="#sec-6"><span class="toc-num">06</span>数据与存储</a></li>
+                <li><a href="#sec-7"><span class="toc-num">07</span>非功能需求</a></li>
+                <li><a href="#sec-8"><span class="toc-num">08</span>成功指标</a></li>
+                <li><a href="#sec-9"><span class="toc-num">09</span>演进路线</a></li>
+                <li><a href="#sec-appendix"><span class="toc-num">A</span>附录</a></li>
+            </ul>
+        </aside>
+
+        <!-- 正文内容 -->
+        <main class="content">
+
+            <!-- ============================================================
+                 第 1 章 产品概述
+                 ============================================================ -->
+            <section class="section" id="sec-1">
+                <h2><span class="sec-num">01</span>产品概述</h2>
+
+                <h3>1.1 项目背景</h3>
+                <p class="lead">台球（尤其是三库台球与九球）实战中，玩家需熟练应用<strong>"颗星公式（Diamond System）"</strong>进行走位计算。目前缺乏脱离实体的线上专项脑力训练工具，玩家只能依赖线下球桌或碎片化视频学习，难以形成系统的心算肌肉记忆。</p>
+
+                <h3>1.2 产品定位</h3>
+                <p>CueMath 是一款<strong>面向移动端的高流畅度、强反馈 H5 训练应用</strong>，帮助玩家通过碎片化时间形成颗星公式的心算肌肉记忆。产品核心理念是：把抽象的几何公式，转化为"看得见轨迹、点得到答案"的即时反馈训练。</p>
+
+                <h3>1.3 业务目标</h3>
+                <div class="grid grid-3">
+                    <div class="card-item">
+                        <div class="card-head"><h4>填补市场空白</h4><span class="badge badge-gold">差异化</span></div>
+                        <p>提供首个线上"颗星公式专项训练"工具，覆盖三库 / 九球走位心算。</p>
+                    </div>
+                    <div class="card-item">
+                        <div class="card-head"><h4>提升实战精度</h4><span class="badge badge-green">价值</span></div>
+                        <p>通过即时轨迹反馈与错题数据，帮助玩家识别"算力盲区"，针对性补强。</p>
+                    </div>
+                    <div class="card-item">
+                        <div class="card-head"><h4>社交裂变获客</h4><span class="badge badge-gold">增长</span></div>
+                        <p>借"脑力测试报告海报"与好友排行榜，实现低成本社交传播。</p>
+                    </div>
+                </div>
+
+                <h3>1.4 目标平台</h3>
+                <table>
+                    <thead>
+                        <tr><th style="width:160px">平台</th><th>定位</th><th>计划阶段</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><strong>移动端 H5</strong></td><td>主力载体，碎片化训练入口</td><td><span class="badge badge-green">Phase 1</span></td></tr>
+                        <tr><td><strong>微信小程序</strong></td><td>社交分享 / 排行榜 / 商业化</td><td><span class="badge badge-gray">Phase 3</span></td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- ============================================================
+                 第 2 章 目标用户与场景
+                 ============================================================ -->
+            <section class="section" id="sec-2">
+                <h2><span class="sec-num">02</span>目标用户与使用场景</h2>
+
+                <h3>2.1 用户画像</h3>
+                <div class="grid grid-3">
+                    <div class="card-item">
+                        <div class="card-head"><h4>P1 · 进阶玩家</h4><span class="badge badge-gold">核心</span></div>
+                        <p>三库 / 九球进阶玩家，已掌握基础公式，需要高频心算训练以巩固走位精度。<strong>痛点：</strong>实战中算不准、脱离球桌无法练习。</p>
+                    </div>
+                    <div class="card-item">
+                        <div class="card-head"><h4>P2 · 台球新手</h4><span class="badge badge-gray">潜力</span></div>
+                        <p>颗星公式零基础，需要从固定点位的简单场景入门。<strong>痛点：</strong>公式晦涩、缺交互式教学。</p>
+                    </div>
+                    <div class="card-item">
+                        <div class="card-head"><h4>P3 · 竞技挑战者</h4><span class="badge badge-red">高频</span></div>
+                        <p>追求极限心算速度与连击成就感。<strong>痛点：</strong>现有工具无计时压榨模式与排行榜。</p>
+                    </div>
+                </div>
+
+                <h3>2.2 用户痛点汇总</h3>
+                <ul>
+                    <li><strong>脱离实体球桌无法训练走位心算</strong>——线下场地与时间成本高。</li>
+                    <li><strong>公式抽象难以理解</strong>——缺乏"输入公式 → 看见轨迹"的直观反馈。</li>
+                    <li><strong>不知算力盲区在哪</strong>——缺乏错题数据可视化与针对性复盘。</li>
+                </ul>
+
+                <h3>2.3 典型使用场景</h3>
+                <div class="quote">
+                    <strong>通勤 / 排队等碎片时间</strong>（5–10 分钟）：刷一组限时题保持心算手感；<br>
+                    <strong>球局开始前热身</strong>：提前激活颗星公式心算反应；<br>
+                    <strong>赛后复盘</strong>：针对错题区间进行专项训练。
+                </div>
+
+                <h3>2.4 用户故事（User Stories）</h3>
+                <table>
+                    <thead>
+                        <tr><th style="width:90px">编号</th><th>用户故事</th><th style="width:90px">优先级</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>US-01</code></td><td>作为 P1 玩家，我希望在地铁上花 5 分钟刷 20 道三库题，以便保持心算手感。</td><td><span class="badge badge-gold">高</span></td></tr>
+                        <tr><td><code>US-02</code></td><td>作为 P2 新手，我希望母球固定、只练目标球点位，以便先掌握基础公式。</td><td><span class="badge badge-gold">高</span></td></tr>
+                        <tr><td><code>US-03</code></td><td>作为 P3 竞技玩家，我希望有限时模式 + 排行榜，以便追求速度极限。</td><td><span class="badge badge-green">中</span></td></tr>
+                        <tr><td><code>US-04</code></td><td>作为任意玩家，我希望看到自己的错题分布，以便针对性补强。</td><td><span class="badge badge-green">中</span></td></tr>
+                        <tr><td><code>US-05</code></td><td>作为社交型用户，我希望一键生成脑力测试海报，以便分享到朋友圈。</td><td><span class="badge badge-gray">低</span></td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- ============================================================
+                 第 3 章 核心功能需求
+                 ============================================================ -->
+            <section class="section" id="sec-3">
+                <h2><span class="sec-num">03</span>核心功能需求</h2>
+
+                <h3>3.1 核心状态机（Game Loop）</h3>
+                <p>单局训练由以下五个状态顺次流转，构成 Core Loop：</p>
+
+                <!-- 状态机流程图 -->
+                <div class="fig">
+                    <svg viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="核心状态机流程图">
+                        <defs>
+                            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#0E5C3A"/>
+                            </marker>
+                            <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#22C55E"/>
+                            </marker>
+                            <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#EF4444"/>
+                            </marker>
+                            <marker id="arrow-gold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#D4AF37"/>
+                            </marker>
+                        </defs>
+
+                        <!-- 五个主状态节点（横向） -->
+                        <g font-family="-apple-system, sans-serif" font-size="13" font-weight="600" text-anchor="middle">
+                            <!-- Init -->
+                            <rect x="10" y="100" width="110" height="50" rx="8" fill="#0E5C3A" stroke="#D4AF37" stroke-width="1.5"/>
+                            <text x="65" y="123" fill="#fff">Init</text>
+                            <text x="65" y="140" fill="#F5E6B8" font-size="10" font-weight="400">初始化</text>
+
+                            <!-- Generate -->
+                            <rect x="160" y="100" width="110" height="50" rx="8" fill="#0E5C3A" stroke="#D4AF37" stroke-width="1.5"/>
+                            <text x="215" y="123" fill="#fff">Generate</text>
+                            <text x="215" y="140" fill="#F5E6B8" font-size="10" font-weight="400">生成题目</text>
+
+                            <!-- Wait_Input -->
+                            <rect x="310" y="100" width="110" height="50" rx="8" fill="#0E5C3A" stroke="#D4AF37" stroke-width="1.5"/>
+                            <text x="365" y="123" fill="#fff">Wait_Input</text>
+                            <text x="365" y="140" fill="#F5E6B8" font-size="10" font-weight="400">等待输入</text>
+
+                            <!-- Animation -->
+                            <rect x="460" y="100" width="110" height="50" rx="8" fill="#A8862A" stroke="#D4AF37" stroke-width="2"/>
+                            <text x="515" y="123" fill="#fff">Animation</text>
+                            <text x="515" y="140" fill="#F5E6B8" font-size="10" font-weight="400">动画判定</text>
+
+                            <!-- Settle -->
+                            <rect x="610" y="100" width="100" height="50" rx="8" fill="#0E5C3A" stroke="#D4AF37" stroke-width="1.5"/>
+                            <text x="660" y="123" fill="#fff">Settle</text>
+                            <text x="660" y="140" fill="#F5E6B8" font-size="10" font-weight="400">结算</text>
+                        </g>
+
+                        <!-- 主流转箭头 -->
+                        <line x1="120" y1="125" x2="155" y2="125" stroke="#0E5C3A" stroke-width="2" marker-end="url(#arrow)"/>
+                        <line x1="270" y1="125" x2="305" y2="125" stroke="#0E5C3A" stroke-width="2" marker-end="url(#arrow)"/>
+                        <line x1="420" y1="125" x2="455" y2="125" stroke="#0E5C3A" stroke-width="2" marker-end="url(#arrow)"/>
+                        <line x1="570" y1="125" x2="605" y2="125" stroke="#0E5C3A" stroke-width="2" marker-end="url(#arrow)"/>
+
+                        <!-- Animation 分支：命中（下） / 错误（上） -->
+                        <!-- 命中分支 -->
+                        <rect x="460" y="200" width="110" height="34" rx="6" fill="#22C55E" opacity="0.18" stroke="#22C55E"/>
+                        <text x="515" y="221" font-size="11" fill="#15803d" text-anchor="middle" font-weight="600">✓ 命中：播放特效</text>
+                        <line x1="515" y1="150" x2="515" y2="196" stroke="#22C55E" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#arrow-green)"/>
+
+                        <!-- 错误分支 -->
+                        <rect x="460" y="20" width="110" height="34" rx="6" fill="#EF4444" opacity="0.15" stroke="#EF4444"/>
+                        <text x="515" y="41" font-size="11" fill="#b91c1c" text-anchor="middle" font-weight="600">✗ 错误：展示正确轨迹</text>
+                        <line x1="515" y1="100" x2="515" y2="58" stroke="#EF4444" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#arrow-red)"/>
+
+                        <!-- Settle → Generate 循环回路 -->
+                        <path d="M 660 100 Q 660 30 215 30 L 215 96" fill="none" stroke="#D4AF37" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#arrow-gold)"/>
+                        <text x="430" y="22" font-size="11" fill="#A8862A" text-anchor="middle" font-weight="600">进入下一题（循环）</text>
+                    </svg>
+                    <div class="fig-caption">图 3-1　核心状态机：Init → Generate → Wait_Input → Animation → Settle，Animation 处分命中 / 错误两支</div>
+                </div>
+
+                <h4>状态说明</h4>
+                <ul>
+                    <li><code>Init</code>：加载球桌素材、音效，初始化刻度系。</li>
+                    <li><code>Generate</code>：根据当前模式（新手 / 进阶 / 大师）从题库策略中生成一组 <code>(A, B)</code> 坐标，渲染母球与目标球。</li>
+                    <li><code>Wait_Input</code>：开启库边热区监听，等待用户点击第一库目标点 <code>C_user</code>。</li>
+                    <li><code>Animation</code>：锁死交互。计算正确点 <code>C_real</code>。
+                        <ul>
+                            <li>若 <code>C_user == C_real</code>，播放命中动画及特效。</li>
+                            <li>若 <code>C_user != C_real</code>，播放错误路线动画，随后展示正确轨迹与公式面板。</li>
+                        </ul>
+                    </li>
+                    <li><code>Settle</code>：更新得分、连击数（Combo）、记录耗时与错题，进入下一题（返回 Generate）。</li>
+                </ul>
+
+                <h3>3.2 模式与关卡规则</h3>
+                <p>产品提供四种训练模式，难度递进、目标差异化。点击下方 Tab 查看各模式详情：</p>
+
+                <!-- 四模式 Tab 切换 -->
+                <div class="tab-group" id="modeTabs">
+                    <div class="tab-nav">
+                        <button class="tab-btn active" data-tab="mode-novice">新手模式</button>
+                        <button class="tab-btn" data-tab="mode-advanced">进阶模式</button>
+                        <button class="tab-btn" data-tab="mode-master">大师模式</button>
+                        <button class="tab-btn" data-tab="mode-time">限时模式</button>
+                    </div>
+
+                    <div class="tab-panel active" id="mode-novice">
+                        <h4>🌱 新手模式 <span class="badge badge-green">Phase 2</span></h4>
+                        <dl>
+                            <dt>生成逻辑</dt><dd>母球固定（点位 50），目标球随机。</dd>
+                            <dt>通关条件</dt><dd>连续答对 <strong>10</strong> 题晋级。</dd>
+                            <dt>失败条件</dt><dd>无失败惩罚，鼓励试错。</dd>
+                            <dt>核心目的</dt><dd>熟悉基本公式与交互，建立公式直觉。</dd>
+                            <dt>目标用户</dt><dd>P2 台球新手。</dd>
+                        </dl>
+                    </div>
+
+                    <div class="tab-panel" id="mode-advanced">
+                        <h4>🎯 进阶模式 <span class="badge badge-gold">Phase 1 MVP</span></h4>
+                        <dl>
+                            <dt>生成逻辑</dt><dd>母球随机，目标球随机。</dd>
+                            <dt>通关条件</dt><dd>连续答对 <strong>15</strong> 题晋级。</dd>
+                            <dt>失败条件</dt><dd>中断连击需重新累计。</dd>
+                            <dt>核心目的</dt><dd>建立动态寻点计算能力。</dd>
+                            <dt>目标用户</dt><dd>P1 进阶玩家。</dd>
+                        </dl>
+                    </div>
+
+                    <div class="tab-panel" id="mode-master">
+                        <h4>🔥 大师模式 <span class="badge badge-red">Phase 2</span></h4>
+                        <dl>
+                            <dt>生成逻辑</dt><dd>引入短边 / 异常角度修正逻辑。</dd>
+                            <dt>通关条件</dt><dd>持续答题，挑战最长连击。</dd>
+                            <dt>失败条件</dt><dd>错 <strong>3</strong> 题即结束。</dd>
+                            <dt>核心目的</dt><dd>攻克公式死角与修正值。</dd>
+                            <dt>目标用户</dt><dd>P1 高阶玩家。</dd>
+                        </dl>
+                    </div>
+
+                    <div class="tab-panel" id="mode-time">
+                        <h4>⏱ 限时模式 <span class="badge badge-gold">Phase 2</span></h4>
+                        <dl>
+                            <dt>生成逻辑</dt><dd>全随机，初始 <strong>60 秒</strong>。</dd>
+                            <dt>计分规则</dt><dd>答对 <strong>+2s</strong>，答错 <strong>-5s</strong>。</dd>
+                            <dt>失败条件</dt><dd>倒计时归零结束。</dd>
+                            <dt>核心目的</dt><dd>极限压榨心算速度。</dd>
+                            <dt>目标用户</dt><dd>P3 竞技挑战者。</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <h3>3.3 颗星公式与轨迹算法</h3>
+                <p>颗星公式是本产品的计算核心，公式表达如下：</p>
+
+                <div class="formula">
+                    <span class="var">A</span>（出发点） &minus; <span class="var">B</span>（目标点） &nbsp;=&nbsp; <span class="var">C</span>（第一库瞄准点）
+                </div>
+
+                <p>算法策略采用<strong>基于几何映射的伪物理计算</strong>，刻意不引入 Box2D 等物理引擎，以保证轨迹可预测、动画轻量：</p>
+                <ul>
+                    <li><strong>状态分离</strong>：球桌视为 2D 坐标系，球与库的关系由映射字典描述。</li>
+                    <li><strong>路径生成</strong>：预先建立颗星刻度到二维坐标的映射字典；根据公式计算出多段折线的端点坐标 <code>(x1, y1) → (x2, y2) → (x3, y3)</code>。</li>
+                    <li><strong>动画执行</strong>：使用 Tween 动画库控制母球沿生成的折线序列按匀速 / 线性减速平移。</li>
+                </ul>
+
+                <h3>3.4 辅助功能</h3>
+                <div class="grid grid-2">
+                    <div class="card-item">
+                        <div class="card-head"><h4>线索盲抽开关</h4><span class="badge badge-gray">Phase 2</span></div>
+                        <p>可选择隐藏 / 显示公式提示，逐步脱离依赖，强化纯心算能力。</p>
+                    </div>
+                    <div class="card-item">
+                        <div class="card-head"><h4>公式解析面板</h4><span class="badge badge-green">Phase 1</span></div>
+                        <p>答题后展示完整公式拆解（A / B / C 取值与折线坐标），帮助复盘。</p>
+                    </div>
+                    <div class="card-item">
+                        <div class="card-head"><h4>音效反馈</h4><span class="badge badge-gray">Phase 2</span></div>
+                        <p>引入音效引擎，命中 / 错误 / 连击各有专属反馈。</p>
+                    </div>
+                    <div class="card-item">
+                        <div class="card-head"><h4>算力盲区报告</h4><span class="badge badge-green">Phase 2</span></div>
+                        <p>训练结束后基于错题矩阵高亮权重区，输出个人盲区热力图。</p>
+                    </div>
+                </div>
+
+                <h3>3.5 关键功能验收标准</h3>
+                <details>
+                    <summary>查看 MVP（Phase 1）核心功能验收标准</summary>
+                    <div class="details-body">
+                        <ul>
+                            <li><strong>AC-01 状态机闭环</strong>：从 Init 出发可顺次走完全部 5 状态并回到 Generate，无卡死。</li>
+                            <li><strong>AC-02 库边点击</strong>：点击任意颗星热区，系统可在 100ms 内进入 Animation。</li>
+                            <li><strong>AC-03 命中判定</strong>：当 <code>|C_user - C_real| ≤ 容差</code> 时判定命中，播放绿色实线轨迹 + 命中特效。</li>
+                            <li><strong>AC-04 错误反馈</strong>：未命中时播放红色虚线错误路线，随后叠加绿色正确轨迹与公式面板。</li>
+                            <li><strong>AC-05 连击累计</strong>：连续答对时 Combo +1，错误归零，并在 Settle 阶段同步得分。</li>
+                            <li><strong>AC-06 进阶模式通关</strong>：连续答对 15 题触发晋级，记录可写入 Local Storage。</li>
+                        </ul>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ============================================================
+                 第 4 章 交互与 UI 规范
+                 ============================================================ -->
+            <section class="section" id="sec-4">
+                <h2><span class="sec-num">04</span>交互与 UI 规范</h2>
+
+                <h3>4.1 视图布局（竖屏 60 / 40）</h3>
+                <p>采用竖屏模式，上下两区分别承担"看球桌"与"操作控制"两个心智：</p>
+                <ul>
+                    <li><strong>上半屏 60%</strong>：二维球桌区域（视角自上而下）。</li>
+                    <li><strong>下半屏 40%</strong>：控制台（得分、计时器、辅助选项、公式解析板）。</li>
+                </ul>
+
+                <h3>4.2 球桌示意图与库边热区</h3>
+                <!-- 球桌示意图 -->
+                <div class="fig">
+                    <svg viewBox="0 0 600 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="球桌与库边热区示意图">
+                        <!-- 球桌台面 -->
+                        <rect x="40" y="40" width="520" height="240" rx="8" fill="#0E5C3A" stroke="#5C3A1A" stroke-width="8"/>
+                        <rect x="40" y="40" width="520" height="240" rx="8" fill="none" stroke="#D4AF37" stroke-width="1.5" stroke-dasharray="3,3" opacity="0.6"/>
+
+                        <!-- 顶边颗星刻度（0-50，标注部分） + 第一库热区高亮 -->
+                        <g font-family="monospace" font-size="11" fill="#F5E6B8" text-anchor="middle">
+                            <!-- 顶边 7 个颗星点 -->
+                            <circle cx="100" cy="40" r="3" fill="#F5E6B8"/>
+                            <circle cx="170" cy="40" r="3" fill="#F5E6B8"/>
+                            <circle cx="240" cy="40" r="3" fill="#F5E6B8"/>
+                            <circle cx="300" cy="40" r="3" fill="#F5E6B8"/>
+                            <circle cx="360" cy="40" r="3" fill="#F5E6B8"/>
+                            <circle cx="430" cy="40" r="3" fill="#F5E6B8"/>
+                            <circle cx="500" cy="40" r="3" fill="#F5E6B8"/>
+
+                            <!-- 第一库热区高亮（示例：第 5 个颗星附近） -->
+                            <rect x="395" y="30" width="70" height="20" rx="4" fill="#D4AF37" opacity="0.35" stroke="#D4AF37" stroke-width="1.5"/>
+                            <text x="430" y="24" fill="#D4AF37" font-weight="700">↓ 第一库热区</text>
+
+                            <!-- 刻度数字示意 -->
+                            <text x="100" y="60" opacity="0.6">10</text>
+                            <text x="170" y="60" opacity="0.6">20</text>
+                            <text x="240" y="60" opacity="0.6">30</text>
+                            <text x="300" y="60" opacity="0.6">40</text>
+                            <text x="360" y="60" opacity="0.6">50</text>
+                            <text x="430" y="60" opacity="0.6">40</text>
+                            <text x="500" y="60" opacity="0.6">30</text>
+
+                            <!-- 底边颗星点 -->
+                            <circle cx="100" cy="280" r="3" fill="#F5E6B8"/>
+                            <circle cx="170" cy="280" r="3" fill="#F5E6B8"/>
+                            <circle cx="240" cy="280" r="3" fill="#F5E6B8"/>
+                            <circle cx="300" cy="280" r="3" fill="#F5E6B8"/>
+                            <circle cx="360" cy="280" r="3" fill="#F5E6B8"/>
+                            <circle cx="430" cy="280" r="3" fill="#F5E6B8"/>
+                            <circle cx="500" cy="280" r="3" fill="#F5E6B8"/>
+                        </g>
+
+                        <!-- 左右边颗星点 -->
+                        <g fill="#F5E6B8" opacity="0.7">
+                            <circle cx="40" cy="100" r="3"/>
+                            <circle cx="40" cy="160" r="3"/>
+                            <circle cx="40" cy="220" r="3"/>
+                            <circle cx="560" cy="100" r="3"/>
+                            <circle cx="560" cy="160" r="3"/>
+                            <circle cx="560" cy="220" r="3"/>
+                        </g>
+
+                        <!-- 母球 A -->
+                        <circle cx="140" cy="200" r="12" fill="#FFFFFF" stroke="#888" stroke-width="1"/>
+                        <text x="140" y="204" font-size="11" fill="#0E5C3A" text-anchor="middle" font-weight="700">A</text>
+
+                        <!-- 目标球 B -->
+                        <circle cx="460" cy="220" r="12" fill="#E8472B" stroke="#fff" stroke-width="1"/>
+                        <text x="460" y="224" font-size="11" fill="#fff" text-anchor="middle" font-weight="700">B</text>
+
+                        <!-- 正确轨迹（绿色实线 0.8）：A → 第一库 → B -->
+                        <line x1="140" y1="200" x2="430" y2="40" stroke="#22C55E" stroke-width="2.5" opacity="0.8"/>
+                        <line x1="430" y1="40" x2="460" y2="220" stroke="#22C55E" stroke-width="2.5" opacity="0.8"/>
+
+                        <!-- 错误路线示例（红色虚线 0.6） -->
+                        <line x1="140" y1="200" x2="300" y2="40" stroke="#EF4444" stroke-width="2" stroke-dasharray="6,4" opacity="0.6"/>
+                    </svg>
+                    <div class="fig-caption">图 4-1　球桌俯视图：颗星刻度（0–50）、第一库热区高亮、母球 A、目标球 B、正确 / 错误轨迹示例</div>
+                </div>
+
+                <h3>4.3 交互热区规范</h3>
+                <div class="callout">
+                    <div class="callout-title">🎯 库边直选（核心交互方案）</div>
+                    第一库对应的颗星点（0–50）设置<strong>不可见的点击热区</strong>。热区宽度需适配手指点击（建议单点热区宽度 ≥ 44px），防止误触；相邻热区之间留出安全间距。
+                </div>
+
+                <h3>4.4 UI 元素规范</h3>
+                <table>
+                    <thead>
+                        <tr><th style="width:140px">元素</th><th>规范</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><strong>球桌</strong></td><td>极简扁平风（Flat Design）或拟物绿呢台布；刻度数字字号需保证移动端清晰可读（≥ 12px）。</td></tr>
+                        <tr><td><strong>正确轨迹</strong></td><td>绿色，<strong>实线</strong>，透明度 <code>0.8</code>。</td></tr>
+                        <tr><td><strong>错误路线</strong></td><td>红色，<strong>虚线</strong>，透明度 <code>0.6</code>。</td></tr>
+                        <tr><td><strong>命中反馈</strong></td><td>播放命中动画及特效（粒子 / 高光）。</td></tr>
+                        <tr><td><strong>错误反馈</strong></td><td>播放错误路线动画，随后叠加正确轨迹与公式面板。</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- ============================================================
+                 第 5 章 技术架构
+                 ============================================================ -->
+            <section class="section" id="sec-5">
+                <h2><span class="sec-num">05</span>技术架构</h2>
+
+                <h3>5.1 技术选型</h3>
+                <table>
+                    <thead>
+                        <tr><th style="width:160px">层级</th><th>技术</th><th>职责</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><strong>前端框架</strong></td><td>Vue 3 / React</td><td>UI 状态管理、计分板、弹窗交互</td></tr>
+                        <tr><td><strong>核心画布</strong></td><td>PixiJS</td><td>2D 桌面绘制、球体动画渲染（WebGL）</td></tr>
+                        <tr><td><strong>动画</strong></td><td>Tween 动画库</td><td>母球沿折线序列匀速 / 线性减速平移</td></tr>
+                        <tr><td><strong>持久化</strong></td><td>Local Storage</td><td>最高分、模式解锁状态、错题矩阵</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>5.2 分层架构</h3>
+                <div class="arch">
+                    <div class="arch-layer">
+                        <div class="layer-name">UI 层<small>USER INTERFACE</small></div>
+                        <div class="layer-tech">
+                            <span class="pill">Vue 3 / React</span>
+                            <span class="pill">计分板</span>
+                            <span class="pill">控制台</span>
+                            <span class="pill">弹窗交互</span>
+                        </div>
+                    </div>
+                    <div class="arch-arrow">▼</div>
+                    <div class="arch-layer">
+                        <div class="layer-name">渲染层<small>PIXIJS CANVAS</small></div>
+                        <div class="layer-tech">
+                            <span class="pill">PixiJS (WebGL)</span>
+                            <span class="pill">球桌绘制</span>
+                            <span class="pill">球体动画</span>
+                            <span class="pill">轨迹渲染</span>
+                        </div>
+                    </div>
+                    <div class="arch-arrow">▼</div>
+                    <div class="arch-layer">
+                        <div class="layer-name">算法层<small>GEOMETRY MAPPING</small></div>
+                        <div class="layer-tech">
+                            <span class="pill">颗星刻度字典</span>
+                            <span class="pill">折线生成</span>
+                            <span class="pill">Tween 控制</span>
+                            <span class="pill">伪物理计算</span>
+                        </div>
+                    </div>
+                    <div class="arch-arrow">▼</div>
+                    <div class="arch-layer">
+                        <div class="layer-name">持久层<small>LOCAL STORAGE</small></div>
+                        <div class="layer-tech">
+                            <span class="pill">最高分</span>
+                            <span class="pill">解锁状态</span>
+                            <span class="pill">错题矩阵</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="callout">
+                    <div class="callout-title">⚙️ 关键设计决策：伪物理而非物理引擎</div>
+                    刻意<strong>不引入 Box2D 等物理引擎</strong>。理由：颗星训练目标是"公式心算"，轨迹必须<strong>可预测、可复现</strong>，物理碰撞的随机性反而干扰公式学习；同时伪物理计算更轻量，适配移动端性能预算。
+                </div>
+            </section>
+
+            <!-- ============================================================
+                 第 6 章 数据与存储
+                 ============================================================ -->
+            <section class="section" id="sec-6">
+                <h2><span class="sec-num">06</span>数据与存储</h2>
+
+                <h3>6.1 本地存储（Local Storage）</h3>
+                <p>所有用户数据均存储于浏览器本地，不上传服务端（Phase 3 排行榜除外）：</p>
+                <ul>
+                    <li><strong>最高分</strong>：各模式历史最高得分。</li>
+                    <li><strong>解锁状态</strong>：新手 / 进阶 / 大师 / 限时模式的解锁进度。</li>
+                </ul>
+
+                <h3>6.2 错题矩阵（ErrorMatrix）</h3>
+                <p>后台维护一个二维矩阵 <code>ErrorMatrix[出发点区间][目标点区间]</code>，每次答错时对应权重 <code>+1</code>。训练结束后，根据矩阵高亮权重区，生成<strong>"算力盲区报告"</strong>。</p>
+
+                <!-- 错题矩阵热力图示意 -->
+                <div class="matrix">
+                    <div class="cell corner">目标 →<br>↓ 出发</div>
+                    <div class="cell head">区 1</div>
+                    <div class="cell head">区 2</div>
+                    <div class="cell head">区 3</div>
+                    <div class="cell head">区 4</div>
+                    <div class="cell head">区 5</div>
+                    <div class="cell head">区 6</div>
+
+                    <div class="cell head">区 1</div>
+                    <div class="cell" style="background:#FDFBF3">1</div>
+                    <div class="cell" style="background:#F5E6B8">3</div>
+                    <div class="cell" style="background:#D4AF37;color:#fff">7</div>
+                    <div class="cell" style="background:#A8862A;color:#fff">12</div>
+                    <div class="cell" style="background:#F5E6B8">2</div>
+                    <div class="cell" style="background:#FDFBF3">0</div>
+
+                    <div class="cell head">区 2</div>
+                    <div class="cell" style="background:#FDFBF3">2</div>
+                    <div class="cell" style="background:#F5E6B8">4</div>
+                    <div class="cell" style="background:#A8862A;color:#fff">9</div>
+                    <div class="cell" style="background:#0A3F2A;color:#fff">15</div>
+                    <div class="cell" style="background:#D4AF37;color:#fff">6</div>
+                    <div class="cell" style="background:#F5E6B8">1</div>
+
+                    <div class="cell head">区 3</div>
+                    <div class="cell" style="background:#F5E6B8">3</div>
+                    <div class="cell" style="background:#D4AF37;color:#fff">8</div>
+                    <div class="cell" style="background:#A8862A;color:#fff">11</div>
+                    <div class="cell" style="background:#D4AF37;color:#fff">7</div>
+                    <div class="cell" style="background:#F5E6B8">2</div>
+                    <div class="cell" style="background:#FDFBF3">1</div>
+
+                    <div class="cell head">区 4</div>
+                    <div class="cell" style="background:#FDFBF3">0</div>
+                    <div class="cell" style="background:#F5E6B8">2</div>
+                    <div class="cell" style="background:#D4AF37;color:#fff">5</div>
+                    <div class="cell" style="background:#F5E6B8">3</div>
+                    <div class="cell" style="background:#FDFBF3">1</div>
+                    <div class="cell" style="background:#FDFBF3">0</div>
+                </div>
+                <div class="matrix-legend">
+                    <span>错误权重低</span>
+                    <span class="gradient"></span>
+                    <span>错误权重高（算力盲区）</span>
+                </div>
+
+                <h3>6.3 数据结构示意</h3>
+<pre><code>// 错题矩阵数据结构（伪代码）
+ErrorMatrix = {
+  [fromZone]: {
+    [toZone]: weight   // 答错次数，整数
+  }
+}
+
+// 示例：出发区 2 → 目标区 4 错误 15 次（重点盲区）
+ErrorMatrix[2][4] === 15</code></pre>
+            </section>
+
+            <!-- ============================================================
+                 第 7 章 非功能需求
+                 ============================================================ -->
+            <section class="section" id="sec-7">
+                <h2><span class="sec-num">07</span>非功能需求</h2>
+
+                <div class="grid grid-2">
+                    <div class="card-item">
+                        <div class="card-head"><h4>⚡ 性能</h4></div>
+                        <p>动画渲染 <strong>60fps</strong>（PixiJS WebGL）；首屏加载 ≤ <strong>2s</strong>（4G 网络）；单题动画响应 ≤ <strong>100ms</strong>。</p>
+                    </div>
+                    <div class="card-item">
+                        <div class="card-head"><h4>📱 兼容性</h4></div>
+                        <p>iOS Safari、Android Chrome、微信 webview；适配 <strong>360px–414px</strong> 主流移动宽度；横屏时提示锁定竖屏。</p>
+                    </div>
+                    <div class="card-item">
+                        <div class="card-head"><h4>🔒 安全</h4></div>
+                        <p>本地数据不上传，保护隐私；限时模式做前端时间篡改校验；<strong>Phase 3 排行榜需服务端二次校验</strong>防作弊。</p>
+                    </div>
+                    <div class="card-item">
+                        <div class="card-head"><h4>♿ 可访问性</h4></div>
+                        <p>刻度数字对比度 ≥ <strong>AA</strong>；支持系统字体放大；关键操作提供非颜色反馈（震动 / 音效）。</p>
+                    </div>
+                    <div class="card-item">
+                        <div class="card-head"><h4>🧩 可维护性</h4></div>
+                        <p>状态机与算法模块化，便于扩展新模式；<strong>题库策略与渲染解耦</strong>，算法层可独立测试。</p>
+                    </div>
+                    <div class="card-item">
+                        <div class="card-head"><h4>📦 体积</h4></div>
+                        <p>H5 首屏资源（gzip）目标 ≤ <strong>500KB</strong>，PixiJS 按需加载，素材采用 SVG / WebP 压缩。</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================
+                 第 8 章 成功指标
+                 ============================================================ -->
+            <section class="section" id="sec-8">
+                <h2><span class="sec-num">08</span>成功指标</h2>
+
+                <h3>8.1 北极星指标</h3>
+                <div class="callout">
+                    <strong>日活训练完成率</strong>：DAU 中完成 ≥ 1 局有效训练的用户占比。目标：≥ <strong>60%</strong>。
+                </div>
+
+                <h3>8.2 指标体系</h3>
+                <table>
+                    <thead>
+                        <tr><th style="width:130px">类别</th><th>指标</th><th style="width:180px">目标值（参考）</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><strong>参与度</strong></td><td>人均单日训练题数 / 平均连击数 / 单局平均耗时</td><td>≥ 20 题 / 局</td></tr>
+                        <tr><td><strong>留存</strong></td><td>次日留存 / 7 日留存</td><td>30% / 12%</td></tr>
+                        <tr><td><strong>体验</strong></td><td>错题率随训练次数下降曲线 / 算力盲区减少率</td><td>两周内 ↓ 30%</td></tr>
+                        <tr><td><strong>业务（Phase 3）</strong></td><td>限时模式排行榜活跃度 / 海报分享裂变系数 K</td><td>K ≥ 0.8</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="quote">
+                    <strong>说明：</strong>以上目标值为产品规划阶段的目标基线，上线后将根据实际数据校准。北极星指标聚焦"用户是否真的在用产品训练"，避免被单纯的"打开率"误导。
+                </div>
+            </section>
+
+            <!-- ============================================================
+                 第 9 章 演进路线
+                 ============================================================ -->
+            <section class="section" id="sec-9">
+                <h2><span class="sec-num">09</span>演进路线</h2>
+                <p>产品分三个阶段迭代，Phase 1 聚焦跑通核心循环，后续逐步完善体验与商业化能力。</p>
+
+                <div class="timeline">
+                    <div class="phase-card p1">
+                        <div class="phase-tag">PHASE 1 · MVP</div>
+                        <h4>跑通核心循环</h4>
+                        <ul>
+                            <li>进阶模式逻辑</li>
+                            <li>核心坐标系映射算法</li>
+                            <li>Tween 轨迹动画</li>
+                            <li>基础库边点击交互</li>
+                        </ul>
+                        <div class="phase-goal">🎯 目标：跑通单局 Core Loop</div>
+                    </div>
+                    <div class="phase-card p2">
+                        <div class="phase-tag">PHASE 2 · 体验完善</div>
+                        <h4>多模式 + 数据闭环</h4>
+                        <ul>
+                            <li>新手 / 大师 / 限时模式</li>
+                            <li>音效引擎</li>
+                            <li>错题本统计算法</li>
+                            <li>"线索盲抽"开关</li>
+                        </ul>
+                        <div class="phase-goal">🎯 目标：完整训练体验 + 盲区报告</div>
+                    </div>
+                    <div class="phase-card p3">
+                        <div class="phase-tag">PHASE 3 · 社交商业化</div>
+                        <h4>小程序 + 裂变</h4>
+                        <ul>
+                            <li>接入微信小程序</li>
+                            <li>好友排行榜（限时模式）</li>
+                            <li>"脑力测试报告"海报</li>
+                            <li>社交裂变获客</li>
+                        </ul>
+                        <div class="phase-goal">🎯 目标：社交裂变 + 商业化探索</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================
+                 附录
+                 ============================================================ -->
+            <section class="section" id="sec-appendix">
+                <h2><span class="sec-num">A</span>附录</h2>
+
+                <h3>A.1 术语表</h3>
+                <details open>
+                    <summary>台球与颗星公式相关术语</summary>
+                    <div class="details-body">
+                        <table>
+                            <thead>
+                                <tr><th style="width:160px">术语</th><th>释义</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><strong>颗星（Diamond）</strong></td><td>球桌库边的刻度标记点，是颗星公式的计算基准。</td></tr>
+                                <tr><td><strong>母球（Cue Ball）</strong></td><td>被球杆击打的白色球，公式中记作 A（出发点）。</td></tr>
+                                <tr><td><strong>目标球（Object Ball）</strong></td><td>需要被击中的球，公式中记作 B（目标点）。</td></tr>
+                                <tr><td><strong>库（Cushion / Rail）</strong></td><td>球桌的边框；"一颗星"= 撞一次库。</td></tr>
+                                <tr><td><strong>三库（Three-cushion）</strong></td><td>母球需撞击库边三次再命中目标球的玩法。</td></tr>
+                                <tr><td><strong>颗星公式（Diamond System）</strong></td><td>利用颗星刻度进行走位计算的几何公式：A − B = C。</td></tr>
+                                <tr><td><strong>Combo（连击）</strong></td><td>连续答对的次数，用作得分加成与成就感反馈。</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+
+                <h3>A.2 修订记录</h3>
+                <table>
+                    <thead>
+                        <tr><th style="width:120px">版本</th><th style="width:140px">日期</th><th>说明</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>v1.0</code></td><td>2026-07-05</td><td>基于 <code>docs/DESIGN_SPEC.md</code> 初版 PRD，融合标准 PRD 模板章节。</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>A.3 关联文档</h3>
+                <ul>
+                    <li><code>docs/DESIGN_SPEC.md</code> — 项目设计说明书（本 PRD 的内容源头）</li>
+                    <li><code>README.md</code> / <code>README_CN.md</code> — 项目说明</li>
+                    <li><code>.spec-workflow/templates/product-template.md</code> — 标准 PRD 章节模板</li>
+                </ul>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- 页脚 -->
+    <footer>
+        <div>CueMath · 台球颗星公式训练 　|　 产品需求文档 <strong style="color:#D4AF37">PRD v1.0</strong></div>
+        <div class="footer-meta">本文档基于 docs/DESIGN_SPEC.md 编写，仅供产品评审使用 · 2026-07-05</div>
+    </footer>
+
+    <!-- ============================================================
+         轻交互脚本（原生 JS，无外部依赖）
+         ============================================================ -->
+    <script>
+        /* 阅读进度条：根据滚动位置更新顶部进度条宽度 */
+        (function () {
+            var bar = document.getElementById('progressBar');
+            function updateProgress() {
+                var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                var scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+                var percent = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+                bar.style.width = percent + '%';
+            }
+            window.addEventListener('scroll', updateProgress, { passive: true });
+            updateProgress();
+        })();
+
+        /* 侧边目录：使用 IntersectionObserver 高亮当前阅读章节 */
+        (function () {
+            var links = document.querySelectorAll('.toc a');
+            var sections = document.querySelectorAll('main.content section.section');
+            var linkMap = {};
+            links.forEach(function (link) {
+                linkMap[link.getAttribute('href').substring(1)] = link;
+            });
+            if (!('IntersectionObserver' in window)) {
+                return;
+            }
+            var observer = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    var id = entry.target.id;
+                    if (entry.isIntersecting && linkMap[id]) {
+                        links.forEach(function (l) { l.classList.remove('active'); });
+                        linkMap[id].classList.add('active');
+                    }
+                });
+            }, { rootMargin: '-20% 0px -70% 0px', threshold: 0 });
+            sections.forEach(function (sec) { observer.observe(sec); });
+        })();
+
+        /* 四模式 Tab 切换 */
+        (function () {
+            var group = document.getElementById('modeTabs');
+            if (!group) {
+                return;
+            }
+            var btns = group.querySelectorAll('.tab-btn');
+            var panels = group.querySelectorAll('.tab-panel');
+            btns.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var target = btn.getAttribute('data-tab');
+                    btns.forEach(function (b) { b.classList.remove('active'); });
+                    panels.forEach(function (p) { p.classList.remove('active'); });
+                    btn.classList.add('active');
+                    var panel = document.getElementById(target);
+                    if (panel) {
+                        panel.classList.add('active');
+                    }
+                });
+            });
+        })();
+
+        /* 移动端目录抽屉：点击悬浮按钮切换目录开关 */
+        (function () {
+            var toggle = document.getElementById('tocToggle');
+            var toc = document.getElementById('toc');
+            if (!toggle || !toc) {
+                return;
+            }
+            toggle.addEventListener('click', function () {
+                toc.classList.toggle('open');
+            });
+            /* 点击目录内链接后自动收起抽屉 */
+            toc.querySelectorAll('a').forEach(function (a) {
+                a.addEventListener('click', function () {
+                    if (window.innerWidth <= 900) {
+                        toc.classList.remove('open');
+                    }
+                });
+            });
+        })();
+    </script>
+</body>
+</html>

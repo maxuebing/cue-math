@@ -1,0 +1,97 @@
+/**
+ * 全局样式：竖屏 70/30 布局（球桌占 70%、控制台占 30%）+ 中八主题色
+ * 桌面端居中预览手机宽容器，移动端占满全屏
+ */
+
+:root {
+  --felt-green: #0e5c3a;
+  --felt-deep: #0a3f2a;
+  --cloth-blue: #1a5fb4;
+  --gold: #d4af37;
+  --gold-soft: #f5e6b8;
+  --gold-deep: #a8862a;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --paper: #f8f6f0;
+  --line: #e5e2d6;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei",
+    "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background: #2a2a2a;
+  color: var(--ink);
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* 手机宽容器：最大 480px */
+.app {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--felt-deep);
+  overflow: hidden;
+}
+
+/* 上半屏 70%：球桌画布区域 */
+.table-area {
+  flex: 0 0 70%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background: var(--felt-deep);
+  min-height: 0;
+}
+
+/* 下半屏 30%：控制台 + 公式面板 */
+.panel-area {
+  flex: 1 1 30%;
+  background: var(--paper);
+  border-top: 3px solid var(--gold);
+  padding: 10px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 桌面端：居中显示带圆角阴影的手机容器 */
+@media (min-width: 481px) {
+  body {
+    align-items: center;
+    padding: 16px;
+  }
+
+  .app {
+    min-height: 0;
+    height: min(900px, 95vh);
+    border-radius: 16px;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
+  }
+}
