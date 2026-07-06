@@ -6,6 +6,7 @@ import { distance } from '../game/geometry';
 import { ADVANCED_PASS_COMBO, DIFFICULTY, type Difficulty } from '../game/constants';
 import { getBestScore, saveBestScore } from '../storage/localStorage';
 import { loadSettings, saveSettings, type UserSettings } from '../storage/settingsStorage';
+import { recordAttempt, recordSession } from '../storage/gameStatsStorage';
 import { useFeedback } from './useFeedback';
 import type { TableApp } from '../game/TableApp';
 import type { AnswerResult, Cushion, GameStateName, Point, Question } from '../game/types';
@@ -33,6 +34,13 @@ export interface GameReactiveState {
 /** 单题命中得分 */
 const SCORE_PER_HIT = 10;
 
+/** 当前局累计统计（用于 session 摘要） */
+interface SessionStats {
+  total: number;
+  hits: number;
+  maxCombo: number;
+}
+
 /**
  * 游戏主控 composable
  *
@@ -43,7 +51,6 @@ export function useGame() {
   const settings = reactive<UserSettings>(loadSettings());
   const feedback = useFeedback(settings);
 
-  /* settings 变更自动持久化 */
   watch(settings, (s) => saveSettings({ ...s }), { deep: true });
 
   const state = reactive<GameReactiveState>({
@@ -60,6 +67,7 @@ export function useGame() {
   const sm = new StateMachine();
   const tableRef = shallowRef<TableApp | null>(null);
   let currentQuestion: Question | null = null;
+  let sessionStats: SessionStats = { total: 0, hits: 0, maxCombo: 0 };
 
   sm.on((s) => {
     state.phase = s;
@@ -71,8 +79,19 @@ export function useGame() {
     table.setOnPick(handlePick);
   }
 
-  /** 开始新一局 */
+  /** 开始新一局：若上一局有答题数据，先记录 session 摘要 */
   function start(): void {
+    if (sessionStats.total > 0) {
+      recordSession({
+        ts: Date.now(),
+        score: state.score,
+        maxCombo: sessionStats.maxCombo,
+        total: sessionStats.total,
+        hits: sessionStats.hits,
+        difficulty: settings.difficulty,
+      });
+    }
+    sessionStats = { total: 0, hits: 0, maxCombo: 0 };
     sm.reset();
     state.score = 0;
     state.combo = 0;
@@ -92,6 +111,22 @@ export function useGame() {
     const t = tableRef.value;
     if (t) {
       t.renderQuestion(currentQuestion);
+      t.enableInput(true);
+    }
+    sm.transition('Wait_Input');
+  }
+
+  /** 重做一道错题（从复盘页触发，直接用历史题面） */
+  function redoMistake(q: Question): void {
+    sm.reset();
+    sm.transition('Generate');
+    currentQuestion = q;
+    state.formula = { cushions: q.cushions };
+    state.lastResult = null;
+    state.attemptStartedAt = Date.now();
+    const t = tableRef.value;
+    if (t) {
+      t.renderQuestion(q);
       t.enableInput(true);
     }
     sm.transition('Wait_Input');
@@ -137,12 +172,32 @@ export function useGame() {
     }
   }
 
-  /** 结算：Animation → Settle */
+  /** 结算：Animation → Settle，记录答题与 session 累计 */
   function settle(): void {
-    if (sm.state !== 'Animation') {
+    if (sm.state !== 'Animation' || !currentQuestion || !state.lastResult) {
       return;
     }
     sm.transition('Settle');
+
+    const q = currentQuestion;
+    const result = state.lastResult;
+    recordAttempt(
+      {
+        ts: Date.now(),
+        hit: result.hit,
+        errorDistance: result.errorDistance,
+        durationMs: Date.now() - state.attemptStartedAt,
+        difficulty: settings.difficulty,
+      },
+      q,
+      result.userPoint,
+    );
+    sessionStats.total += 1;
+    if (result.hit) {
+      sessionStats.hits += 1;
+    }
+    sessionStats.maxCombo = Math.max(sessionStats.maxCombo, state.combo);
+
     if (saveBestScore(state.score)) {
       state.bestScore = state.score;
     }
@@ -172,6 +227,7 @@ export function useGame() {
     start,
     gotoNext,
     setDifficulty,
+    redoMistake,
     unlockAudio: feedback.unlock,
   };
 }
