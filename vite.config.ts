@@ -7,6 +7,8 @@ import vue from '@vitejs/plugin-vue';
  */
 export default defineConfig({
   plugins: [vue()],
+  /* 部署在子路径（如 /cue/）时用相对 base，资源解析为 ./assets/... */
+  base: './',
   server: {
     host: true,
     port: 5173,
