@@ -1032,7 +1032,7 @@
             <div class="hero-text">
                 <span class="eyebrow">PRODUCT REQUIREMENTS DOCUMENT</span>
                 <h1>CueMath · 台球颗星公式训练</h1>
-                <p class="subtitle">一款面向移动端的高流畅度、强反馈 H5 训练应用，帮助玩家通过碎片化时间形成颗星公式（Diamond System）的心算肌肉记忆。</p>
+                <p class="subtitle">一款面向中式八球玩家的 H5 训练应用，通过"多障碍球挡路 → 自由选库 → 镜像法路径计算 → 即时轨迹反馈"，帮助玩家通过碎片化时间掌握 2 库解球心算技巧。</p>
                 <div class="hero-meta">
                     <span><span class="dot"></span>版本 v1.0</span>
                     <span><span class="dot"></span>状态：评审中</span>
@@ -1109,35 +1109,37 @@
                 <h2><span class="sec-num">01</span>产品概述</h2>
 
                 <h3>1.1 项目背景</h3>
-                <p class="lead">台球（尤其是三库台球与九球）实战中，玩家需熟练应用<strong>"颗星公式（Diamond System）"</strong>进行走位计算。目前缺乏脱离实体的线上专项脑力训练工具，玩家只能依赖线下球桌或碎片化视频学习，难以形成系统的心算肌肉记忆。</p>
+                <p class="lead">中式八球实战中，当目标球被障碍球挡住直线与单库路径时，玩家必须使用<strong>2 库解球</strong>——母球经两条库边反弹后击中目标球，要求玩家快速进行"镜像展开"心算。目前缺乏线上专项训练工具反复练习这一核心技能。</p>
 
                 <h3>1.2 产品定位</h3>
-                <p>CueMath 是一款<strong>面向移动端的高流畅度、强反馈 H5 训练应用</strong>，帮助玩家通过碎片化时间形成颗星公式的心算肌肉记忆。产品核心理念是：把抽象的几何公式，转化为"看得见轨迹、点得到答案"的即时反馈训练。</p>
+                <p>CueMath 是一款<strong>面向中式八球玩家的 H5 训练应用</strong>，通过"多障碍球挡路 → 自由选库 → 镜像法路径计算 → 即时轨迹反馈"的训练循环，帮助玩家通过碎片化时间掌握 2 库解球的心算技巧。</p>
 
                 <h3>1.3 业务目标</h3>
                 <div class="grid grid-3">
                     <div class="card-item">
-                        <div class="card-head"><h4>填补市场空白</h4><span class="badge badge-gold">差异化</span></div>
-                        <p>提供首个线上"颗星公式专项训练"工具，覆盖三库 / 九球走位心算。</p>
+                        <div class="card-head"><h4>填补训练空白</h4><span class="badge badge-gold">差异化</span></div>
+                        <p>提供线上"2 库 kick 专项训练"，涵盖多障碍球逼迫、自由选库、镜像法验证。</p>
                     </div>
                     <div class="card-item">
                         <div class="card-head"><h4>提升实战精度</h4><span class="badge badge-green">价值</span></div>
-                        <p>通过即时轨迹反馈与错题数据，帮助玩家识别"算力盲区"，针对性补强。</p>
+                        <p>错题本 + 盲区热力图，帮助玩家识别"哪条库/哪个象限"薄弱点，针对性补强。</p>
                     </div>
                     <div class="card-item">
-                        <div class="card-head"><h4>社交裂变获客</h4><span class="badge badge-gold">增长</span></div>
-                        <p>借"脑力测试报告海报"与好友排行榜，实现低成本社交传播。</p>
+                        <div class="card-head"><h4>多样化训练</h4><span class="badge badge-gold">深度</span></div>
+                        <p>新手（固定母球）→ 进阶（随机）→ 大师（错 3 次结束）→ 限时（60s ± 时间）。</p>
                     </div>
                 </div>
 
-                <h3>1.4 目标平台</h3>
+                <h3>1.4 技术栈（已实现）</h3>
                 <table>
-                    <thead>
-                        <tr><th style="width:160px">平台</th><th>定位</th><th>计划阶段</th></tr>
-                    </thead>
+                    <thead><tr><th>维度</th><th>选型</th><th>状态</th></tr></thead>
                     <tbody>
-                        <tr><td><strong>移动端 H5</strong></td><td>主力载体，碎片化训练入口</td><td><span class="badge badge-green">Phase 1</span></td></tr>
-                        <tr><td><strong>微信小程序</strong></td><td>社交分享 / 排行榜 / 商业化</td><td><span class="badge badge-gray">Phase 3</span></td></tr>
+                        <tr><td>前端框架</td><td>Vue 3 + Composition API</td><td>✅</td></tr>
+                        <tr><td>语言</td><td>TypeScript（strict）</td><td>✅</td></tr>
+                        <tr><td>构建</td><td>Vite 8</td><td>✅</td></tr>
+                        <tr><td>渲染</td><td>PixiJS v8（WebGL）</td><td>✅</td></tr>
+                        <tr><td>动画</td><td>@tweenjs/tween.js v25</td><td>✅</td></tr>
+                        <tr><td>部署</td><td>Nginx + HTTPS（自有服务器）</td><td>✅</td></tr>
                     </tbody>
                 </table>
             </section>
@@ -1151,16 +1153,16 @@
                 <h3>2.1 用户画像</h3>
                 <div class="grid grid-3">
                     <div class="card-item">
-                        <div class="card-head"><h4>P1 · 进阶玩家</h4><span class="badge badge-gold">核心</span></div>
-                        <p>三库 / 九球进阶玩家，已掌握基础公式，需要高频心算训练以巩固走位精度。<strong>痛点：</strong>实战中算不准、脱离球桌无法练习。</p>
+                        <div class="card-head"><h4>P1 · 中八进阶玩家</h4><span class="badge badge-gold">核心</span></div>
+                        <p>中式八球进阶玩家，需要掌握 2 库解球的镜像法心算技巧。<strong>痛点：</strong>障碍球挡路时不知道该撞哪两条库、撞点算不准，缺乏线上反复练习工具。</p>
                     </div>
                     <div class="card-item">
-                        <div class="card-head"><h4>P2 · 台球新手</h4><span class="badge badge-gray">潜力</span></div>
-                        <p>颗星公式零基础，需要从固定点位的简单场景入门。<strong>痛点：</strong>公式晦涩、缺交互式教学。</p>
+                        <div class="card-head"><h4>P2 · 中八新手</h4><span class="badge badge-gray">潜力</span></div>
+                        <p>中式八球初学者，需要从固定母球的简单场景入门，学习 2 库解球的基本思路。<strong>痛点：</strong>镜像法概念抽象，缺乏交互式教学工具。</p>
                     </div>
                     <div class="card-item">
                         <div class="card-head"><h4>P3 · 竞技挑战者</h4><span class="badge badge-red">高频</span></div>
-                        <p>追求极限心算速度与连击成就感。<strong>痛点：</strong>现有工具无计时压榨模式与排行榜。</p>
+                        <p>追求极限解球速度与连击成就感，需要限时压榨和高难度挑战。<strong>痛点：</strong>现有工具无倒计时 / 错题限次 / 难度梯度。</p>
                     </div>
                 </div>
 
@@ -1184,11 +1186,11 @@
                         <tr><th style="width:90px">编号</th><th>用户故事</th><th style="width:90px">优先级</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><code>US-01</code></td><td>作为 P1 玩家，我希望在地铁上花 5 分钟刷 20 道三库题，以便保持心算手感。</td><td><span class="badge badge-gold">高</span></td></tr>
-                        <tr><td><code>US-02</code></td><td>作为 P2 新手，我希望母球固定、只练目标球点位，以便先掌握基础公式。</td><td><span class="badge badge-gold">高</span></td></tr>
-                        <tr><td><code>US-03</code></td><td>作为 P3 竞技玩家，我希望有限时模式 + 排行榜，以便追求速度极限。</td><td><span class="badge badge-green">中</span></td></tr>
-                        <tr><td><code>US-04</code></td><td>作为任意玩家，我希望看到自己的错题分布，以便针对性补强。</td><td><span class="badge badge-green">中</span></td></tr>
-                        <tr><td><code>US-05</code></td><td>作为社交型用户，我希望一键生成脑力测试海报，以便分享到朋友圈。</td><td><span class="badge badge-gray">低</span></td></tr>
+                        <tr><td><code>US-01</code></td><td>作为 P1 玩家，我希望每天刷 2 库 kick 题，保持镜像法心算手感。</td><td><span class="badge badge-gold">高</span></td></tr>
+                        <tr><td><code>US-02</code></td><td>作为 P2 新手，我希望母球固定、容差大，先学会 2 库解球基本思路。</td><td><span class="badge badge-gold">高</span></td></tr>
+                        <tr><td><code>US-03</code></td><td>作为 P3 玩家，我希望有限时（60s±）和大师（错3次结束）模式挑战极限。</td><td><span class="badge badge-green">中</span></td></tr>
+                        <tr><td><code>US-04</code></td><td>作为任意玩家，我希望看到错题分布（母球象限×第一库热力图）针对性补强。</td><td><span class="badge badge-green">中</span></td></tr>
+                        <tr><td><code>US-05</code></td><td>作为任意玩家，我希望自由选择撞哪条库（不限高亮），考验我的判断力。</td><td><span class="badge badge-green">中</span></td></tr>
                     </tbody>
                 </table>
             </section>
@@ -1299,81 +1301,87 @@
                     </div>
 
                     <div class="tab-panel active" id="mode-novice">
-                        <h4>🌱 新手模式 <span class="badge badge-green">Phase 2</span></h4>
+                        <h4>🌱 新手模式 <span class="badge badge-green">✅ 已实现</span></h4>
                         <dl>
-                            <dt>生成逻辑</dt><dd>母球固定（点位 50），目标球随机。</dd>
+                            <dt>生成逻辑</dt><dd>母球固定（左下角），目标球随机，多障碍球挡路。</dd>
+                            <dt>命中容差</dt><dd><strong>34px</strong>（大容差，鼓励试错）。</dd>
                             <dt>通关条件</dt><dd>连续答对 <strong>10</strong> 题晋级。</dd>
-                            <dt>失败条件</dt><dd>无失败惩罚，鼓励试错。</dd>
-                            <dt>核心目的</dt><dd>熟悉基本公式与交互，建立公式直觉。</dd>
-                            <dt>目标用户</dt><dd>P2 台球新手。</dd>
+                            <dt>失败条件</dt><dd>无失败惩罚。</dd>
+                            <dt>核心目的</dt><dd>固定母球场景，建立 2 库解球基本思路。</dd>
+                            <dt>目标用户</dt><dd>P2 中八新手。</dd>
                         </dl>
                     </div>
 
                     <div class="tab-panel" id="mode-advanced">
-                        <h4>🎯 进阶模式 <span class="badge badge-gold">Phase 1 MVP</span></h4>
+                        <h4>🎯 进阶模式 <span class="badge badge-gold">✅ 已实现 · 默认模式</span></h4>
                         <dl>
-                            <dt>生成逻辑</dt><dd>母球随机，目标球随机。</dd>
+                            <dt>生成逻辑</dt><dd>母球随机，目标球随机，多障碍球定向挡路。</dd>
+                            <dt>命中容差</dt><dd><strong>20px</strong>（标准容差）。</dd>
                             <dt>通关条件</dt><dd>连续答对 <strong>15</strong> 题晋级。</dd>
                             <dt>失败条件</dt><dd>中断连击需重新累计。</dd>
-                            <dt>核心目的</dt><dd>建立动态寻点计算能力。</dd>
-                            <dt>目标用户</dt><dd>P1 进阶玩家。</dd>
+                            <dt>核心目的</dt><dd>随机场景，建立动态 2 库计算能力。</dd>
+                            <dt>目标用户</dt><dd>P1 中八进阶玩家。</dd>
                         </dl>
                     </div>
 
                     <div class="tab-panel" id="mode-master">
-                        <h4>🔥 大师模式 <span class="badge badge-red">Phase 2</span></h4>
+                        <h4>🔥 大师模式 <span class="badge badge-red">✅ 已实现</span></h4>
                         <dl>
-                            <dt>生成逻辑</dt><dd>引入短边 / 异常角度修正逻辑。</dd>
-                            <dt>通关条件</dt><dd>持续答题，挑战最长连击。</dd>
-                            <dt>失败条件</dt><dd>错 <strong>3</strong> 题即结束。</dd>
-                            <dt>核心目的</dt><dd>攻克公式死角与修正值。</dd>
+                            <dt>生成逻辑</dt><dd>母球随机，目标球随机，小容差精准要求。</dd>
+                            <dt>命中容差</dt><dd><strong>14px</strong>（小容差，精准挑战）。</dd>
+                            <dt>失败条件</dt><dd>错 <strong>3</strong> 题即结束（生命机制）。</dd>
+                            <dt>核心目的</dt><dd>极限精准度训练，攻克解球误差。</dd>
                             <dt>目标用户</dt><dd>P1 高阶玩家。</dd>
                         </dl>
                     </div>
 
                     <div class="tab-panel" id="mode-time">
-                        <h4>⏱ 限时模式 <span class="badge badge-gold">Phase 2</span></h4>
+                        <h4>⏱ 限时模式 <span class="badge badge-gold">✅ 已实现</span></h4>
                         <dl>
-                            <dt>生成逻辑</dt><dd>全随机，初始 <strong>60 秒</strong>。</dd>
+                            <dt>生成逻辑</dt><dd>母球随机，目标球随机，倒计时压榨。</dd>
+                            <dt>命中容差</dt><dd><strong>20px</strong>（标准容差）。</dd>
                             <dt>计分规则</dt><dd>答对 <strong>+2s</strong>，答错 <strong>-5s</strong>。</dd>
-                            <dt>失败条件</dt><dd>倒计时归零结束。</dd>
-                            <dt>核心目的</dt><dd>极限压榨心算速度。</dd>
+                            <dt>失败条件</dt><dd>倒计时归零（60s）结束。</dd>
+                            <dt>核心目的</dt><dd>极限压榨解球速度，结合时间压力。</dd>
                             <dt>目标用户</dt><dd>P3 竞技挑战者。</dd>
                         </dl>
                     </div>
                 </div>
 
-                <h3>3.3 颗星公式与轨迹算法</h3>
-                <p>颗星公式是本产品的计算核心，公式表达如下：</p>
+                <h3>3.3 镜像法算法（反射定律展开）</h3>
+                <p>2 库解球的核心算法基于<strong>镜像法</strong>（Reflection Method）：目标球关于第二库镜像，再关于第一库镜像，母球到最终虚像的直线交第一库得 P1，P1 到一阶虚像的直线交第二库得 P2。</p>
 
                 <div class="formula">
-                    <span class="var">A</span>（出发点） &minus; <span class="var">B</span>（目标点） &nbsp;=&nbsp; <span class="var">C</span>（第一库瞄准点）
+                    T1 = mirror(Target, c2)  →  T2 = mirror(T1, c1)  →  P1 = line(Cue, T2) ∩ c1  →  P2 = line(P1, T1) ∩ c2
                 </div>
 
-                <p>算法策略采用<strong>基于几何映射的伪物理计算</strong>，刻意不引入 Box2D 等物理引擎，以保证轨迹可预测、动画轻量：</p>
+                <p>算法要点：</p>
                 <ul>
-                    <li><strong>状态分离</strong>：球桌视为 2D 坐标系，球与库的关系由映射字典描述。</li>
-                    <li><strong>路径生成</strong>：预先建立颗星刻度到二维坐标的映射字典；根据公式计算出多段折线的端点坐标 <code>(x1, y1) → (x2, y2) → (x3, y3)</code>。</li>
-                    <li><strong>动画执行</strong>：使用 Tween 动画库控制母球沿生成的折线序列按匀速 / 线性减速平移。</li>
+                    <li><strong>双库镜像展开</strong>：两次镜像等价于母球直线瞄准虚像，交点即为两库撞点（反射定律保证）。</li>
+                    <li><strong>多障碍球定向放置</strong>：题面随机放 2-3 个障碍球，定向挡住直线与全部 4 条 1 库路径，迫使必须 2 库解球。</li>
+                    <li><strong>自由选库</strong>：4 条库边均可点击选择第一库撞点，不限高亮特定库，考验玩家的库边判断力。</li>
+                    <li><strong>内缩边界校验</strong>：撞点坐标必须在球桌库边段内（内缩球半径），防止路径跑出球桌外。</li>
                 </ul>
 
-                <h3>3.4 辅助功能</h3>
+                <p>算法策略采用<strong>几何映射（伪物理）</strong>，刻意不引入物理引擎——镜像法给出精确的反射定律路径，保证轨迹可预测、可复现。</p>
+
+                <h3>3.4 辅助功能（已实现）</h3>
                 <div class="grid grid-2">
                     <div class="card-item">
-                        <div class="card-head"><h4>线索盲抽开关</h4><span class="badge badge-gray">Phase 2</span></div>
-                        <p>可选择隐藏 / 显示公式提示，逐步脱离依赖，强化纯心算能力。</p>
+                        <div class="card-head"><h4>音效与震动反馈</h4><span class="badge badge-green">✅ 已实现</span></div>
+                        <p>Web Audio API 合成音效（命中 / 错误 / 通关），navigator.vibrate 震动，首次用户手势解锁 AudioContext，开关持久化。</p>
                     </div>
                     <div class="card-item">
-                        <div class="card-head"><h4>公式解析面板</h4><span class="badge badge-green">Phase 1</span></div>
-                        <p>答题后展示完整公式拆解（A / B / C 取值与折线坐标），帮助复盘。</p>
+                        <div class="card-head"><h4>公式解析面板</h4><span class="badge badge-green">✅ 已实现</span></div>
+                        <p>答题后显示镜像法路径（母球 → 第一库 → 第二库 → 目标球），误差距离 px，撞点坐标对比。</p>
                     </div>
                     <div class="card-item">
-                        <div class="card-head"><h4>音效反馈</h4><span class="badge badge-gray">Phase 2</span></div>
-                        <p>引入音效引擎，命中 / 错误 / 连击各有专属反馈。</p>
+                        <div class="card-head"><h4>错题本 + 盲区热力图</h4><span class="badge badge-green">✅ 已实现</span></div>
+                        <p>最近 200 条错题详情 + "重做此题"入口；4×4 盲区热力图（母球象限 × 第一库）；得分曲线（最近 20 局）。</p>
                     </div>
                     <div class="card-item">
-                        <div class="card-head"><h4>算力盲区报告</h4><span class="badge badge-green">Phase 2</span></div>
-                        <p>训练结束后基于错题矩阵高亮权重区，输出个人盲区热力图。</p>
+                        <div class="card-head"><h4>线索盲抽开关</h4><span class="badge badge-gray">待规划</span></div>
+                        <p>可选择隐藏 / 显示库顺序提示，逐步脱离依赖，强化纯心算能力。</p>
                     </div>
                 </div>
 
@@ -1382,12 +1390,13 @@
                     <summary>查看 MVP（Phase 1）核心功能验收标准</summary>
                     <div class="details-body">
                         <ul>
-                            <li><strong>AC-01 状态机闭环</strong>：从 Init 出发可顺次走完全部 5 状态并回到 Generate，无卡死。</li>
-                            <li><strong>AC-02 库边点击</strong>：点击任意颗星热区，系统可在 100ms 内进入 Animation。</li>
-                            <li><strong>AC-03 命中判定</strong>：当 <code>|C_user - C_real| ≤ 容差</code> 时判定命中，播放绿色实线轨迹 + 命中特效。</li>
-                            <li><strong>AC-04 错误反馈</strong>：未命中时播放红色虚线错误路线，随后叠加绿色正确轨迹与公式面板。</li>
-                            <li><strong>AC-05 连击累计</strong>：连续答对时 Combo +1，错误归零，并在 Settle 阶段同步得分。</li>
-                            <li><strong>AC-06 进阶模式通关</strong>：连续答对 15 题触发晋级，记录可写入 Local Storage。</li>
+                            <li><strong>AC-01 状态机闭环</strong>：Init → Generate → Wait_Input → Animation → Settle，无卡死。✅ 已验证</li>
+                            <li><strong>AC-02 库边点击</strong>：4 库均响应 pointerdown，进入 Animation ≤ 100ms。✅ 已验证</li>
+                            <li><strong>AC-03 命中判定</strong>：距离 ≤ 容差判定命中，绿色实线 + 命中特效 + 音效。✅ 实测命中</li>
+                            <li><strong>AC-04 错误反馈</strong>：红色虚线用户路线 + 绿色正确路线 + 公式面板 + 误差距离。✅ 实测错误</li>
+                            <li><strong>AC-05 连击累计</strong>：Combo +1 / 清零，通关判定，音效震动反馈。✅ 实测通过</li>
+                            <li><strong>AC-06 模式结束</strong>：新手/进阶通关连击、大师错 3 次结束、限时归零结束。✅ 逻辑验证</li>
+                            <li><strong>AC-07 数据持久</strong>：LocalStorage（cuemath.stats.v1）：错题本 / 热力图 / session 刷新持久。✅ 已验证</li>
                         </ul>
                     </div>
                 </details>
@@ -1509,10 +1518,13 @@
                         <tr><th style="width:160px">层级</th><th>技术</th><th>职责</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><strong>前端框架</strong></td><td>Vue 3 / React</td><td>UI 状态管理、计分板、弹窗交互</td></tr>
-                        <tr><td><strong>核心画布</strong></td><td>PixiJS</td><td>2D 桌面绘制、球体动画渲染（WebGL）</td></tr>
-                        <tr><td><strong>动画</strong></td><td>Tween 动画库</td><td>母球沿折线序列匀速 / 线性减速平移</td></tr>
-                        <tr><td><strong>持久化</strong></td><td>Local Storage</td><td>最高分、模式解锁状态、错题矩阵</td></tr>
+                        <tr><td><strong>前端框架</strong></td><td>Vue 3 + Composition API</td><td>UI 状态管理、组件化、响应式状态</td></tr>
+                        <tr><td><strong>语言</strong></td><td>TypeScript（strict）</td><td>类型安全、IDE 支持、可维护性</td></tr>
+                        <tr><td><strong>构建工具</strong></td><td>Vite 8</td><td>极速 HMR、生产构建、静态分包</td></tr>
+                        <tr><td><strong>渲染引擎</strong></td><td>PixiJS v8（WebGL）</td><td>2D 桌面绘制、球体动画、事件系统</td></tr>
+                        <tr><td><strong>动画</strong></td><td>@tweenjs/tween.js v25</td><td>母球沿折线平移、Ticker 集成</td></tr>
+                        <tr><td><strong>持久化</strong></td><td>Local Storage</td><td>错题本、热力图聚合、session 摘要、用户设置</td></tr>
+                        <tr><td><strong>部署</strong></td><td>Nginx + HTTPS</td><td>自有服务器、子路径（/cue/）、Let's Encrypt</td></tr>
                     </tbody>
                 </table>
 
@@ -1712,34 +1724,36 @@ ErrorMatrix[2][4] === 15</code></pre>
 
                 <div class="timeline">
                     <div class="phase-card p1">
-                        <div class="phase-tag">PHASE 1 · MVP</div>
-                        <h4>跑通核心循环</h4>
+                        <div class="phase-tag">PHASE 1 · MVP ✅ 已完成</div>
+                        <h4>核心循环 + 体验打磨</h4>
                         <ul>
-                            <li>进阶模式逻辑</li>
-                            <li>核心坐标系映射算法</li>
-                            <li>Tween 轨迹动画</li>
-                            <li>基础库边点击交互</li>
+                            <li>镜像法 2 库算法（反射定律）</li>
+                            <li>多障碍球定向挡路 + 自由选库</li>
+                            <li>4 种训练模式（新手 / 进阶 / 大师 / 限时）</li>
+                            <li>音效震动反馈（Web Audio 合成）</li>
+                            <li>错题本 + 盲区热力图 + 得分曲线</li>
+                            <li>Nginx + HTTPS 部署（/cue/ 子路径）</li>
                         </ul>
-                        <div class="phase-goal">🎯 目标：跑通单局 Core Loop</div>
+                        <div class="phase-goal">✅ 目标已达成：完整训练闭环</div>
                     </div>
                     <div class="phase-card p2">
-                        <div class="phase-tag">PHASE 2 · 体验完善</div>
-                        <h4>多模式 + 数据闭环</h4>
+                        <div class="phase-tag">PHASE 2 · 待规划</div>
+                        <h4>增强体验</h4>
                         <ul>
-                            <li>新手 / 大师 / 限时模式</li>
-                            <li>音效引擎</li>
-                            <li>错题本统计算法</li>
-                            <li>"线索盲抽"开关</li>
+                            <li>颗星数字标注（辅助公式心算）</li>
+                            <li>"线索盲抽"开关（隐藏库顺序提示）</li>
+                            <li>训练历史趋势（周报 / 月报）</li>
+                            <li>音效资源优化（真实击球音效）</li>
                         </ul>
-                        <div class="phase-goal">🎯 目标：完整训练体验 + 盲区报告</div>
+                        <div class="phase-goal">🎯 目标：深度训练体验</div>
                     </div>
                     <div class="phase-card p3">
-                        <div class="phase-tag">PHASE 3 · 社交商业化</div>
-                        <h4>小程序 + 裂变</h4>
+                        <div class="phase-tag">PHASE 3 · 待规划</div>
+                        <h4>小程序 + 社交</h4>
                         <ul>
-                            <li>接入微信小程序</li>
+                            <li>微信小程序（需 PixiJS webview 适配）</li>
                             <li>好友排行榜（限时模式）</li>
-                            <li>"脑力测试报告"海报</li>
+                            <li>"脑力测试报告"海报裂变</li>
                             <li>社交裂变获客</li>
                         </ul>
                         <div class="phase-goal">🎯 目标：社交裂变 + 商业化探索</div>

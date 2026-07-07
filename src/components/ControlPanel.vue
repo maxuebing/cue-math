@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import type { GameReactiveState } from '../composables/useGame';
 import type { UserSettings } from '../storage/settingsStorage';
-import { ADVANCED_PASS_COMBO, type Difficulty } from '../game/constants';
+import { MODE_ORDER, MODE_RULES } from '../game/modeRules';
+import type { Mode } from '../game/types';
 
 /**
- * 控制台：得分 / 连击 / 最高分、难度选择、音效/震动开关、任务提示、操作按钮
+ * 控制台：模式选择 + 得分/连击/倒计时/生命 + 任务提示 + GameOver + 操作按钮
  */
-defineProps<{
+const props = defineProps<{
   state: GameReactiveState;
   settings: UserSettings;
 }>();
@@ -14,22 +15,24 @@ defineProps<{
 const emit = defineEmits<{
   next: [];
   restart: [];
-  'set-difficulty': [d: Difficulty];
+  'set-mode': [m: Mode];
   'toggle-sound': [on: boolean];
   'toggle-vibrate': [on: boolean];
 }>();
 
-const DIFFICULTIES: ReadonlyArray<{ key: Difficulty; label: string }> = [
-  { key: 'easy', label: '简单' },
-  { key: 'normal', label: '进阶' },
-  { key: 'hard', label: '大师' },
-];
+function rule() {
+  return MODE_RULES[props.state.mode];
+}
+
+function fmtTime(ms: number): string {
+  return `${(ms / 1000).toFixed(1)}s`;
+}
 </script>
 
 <template>
   <div class="control-panel">
     <div class="top-row">
-      <span class="mode-tag">中八 · 2 库 kick</span>
+      <span class="mode-tag">{{ rule().name }}模式</span>
       <div class="toggles">
         <label class="toggle" title="音效">
           <input
@@ -59,30 +62,43 @@ const DIFFICULTIES: ReadonlyArray<{ key: Difficulty; label: string }> = [
         <span class="label">连击</span>
         <span class="value">{{ state.combo }}</span>
       </div>
-      <div class="stat">
+      <div class="stat" v-if="rule().timeLimitMs > 0">
+        <span class="label">剩余</span>
+        <span class="value time" :class="{ urgent: state.timeRemainingMs < 10000 }">
+          {{ fmtTime(state.timeRemainingMs) }}
+        </span>
+      </div>
+      <div class="stat" v-else>
         <span class="label">最高</span>
         <span class="value">{{ state.bestScore }}</span>
       </div>
+      <div class="stat" v-if="rule().maxMistakes > 0">
+        <span class="label">生命</span>
+        <span class="value">{{ rule().maxMistakes - state.mistakes }}</span>
+      </div>
     </div>
 
-    <div class="seg">
+    <div class="mode-grid">
       <button
-        v-for="d in DIFFICULTIES"
-        :key="d.key"
-        :class="['seg-btn', { active: settings.difficulty === d.key }]"
-        @click="emit('set-difficulty', d.key)"
+        v-for="m in MODE_ORDER"
+        :key="m"
+        :class="['mode-btn', { active: settings.mode === m }]"
+        @click="emit('set-mode', m)"
       >
-        {{ d.label }}
+        <div class="mode-name">{{ MODE_RULES[m].name }}</div>
       </button>
     </div>
+    <div class="mode-desc">{{ rule().desc }}</div>
 
-    <div class="task-hint" v-if="state.formula && state.phase === 'Wait_Input'">
-      <div class="task-line">
-        🎯 绕开<strong>灰色障碍球</strong>，2 库击中目标球
-      </div>
-      <div class="task-line input-tip">👆 点击任意库边选第一库撞点（自行判断撞哪条库）</div>
+    <div class="game-over-banner" v-if="state.gameEndReason">
+      <template v-if="state.gameEndReason === 'pass'">🎉 通关！得分 {{ state.score }}</template>
+      <template v-else-if="state.gameEndReason === 'timeup'">⏱ 时间到 · 得分 {{ state.score }}</template>
+      <template v-else>✗ 错题上限 · 得分 {{ state.score }}</template>
     </div>
-
+    <div class="task-hint" v-else-if="state.formula && state.phase === 'Wait_Input'">
+      <div class="task-line">🎯 绕开<strong>灰色障碍球</strong>，2 库击中目标球</div>
+      <div class="task-line input-tip">👆 点击任意库边选第一库撞点</div>
+    </div>
     <div
       class="hint hit-hint"
       v-else-if="state.lastResult && state.lastResult.hit && state.phase === 'Settle'"
@@ -93,24 +109,22 @@ const DIFFICULTIES: ReadonlyArray<{ key: Difficulty; label: string }> = [
       class="hint miss-hint"
       v-else-if="state.lastResult && !state.lastResult.hit && state.phase === 'Settle'"
     >
-      ✗ 未命中，连击清零（误差 {{ state.lastResult.errorDistance }}px）
-    </div>
-
-    <div class="passed-banner" v-if="state.passed">
-      🎉 通关！已连续答对 {{ ADVANCED_PASS_COMBO }} 题
+      ✗ 未命中（误差 {{ state.lastResult.errorDistance }}px）
     </div>
 
     <div class="actions">
+      <button v-if="state.gameEndReason" class="btn primary" @click="emit('restart')">
+        再来一局
+      </button>
       <button
+        v-else
         class="btn primary"
-        :disabled="state.phase !== 'Settle' || state.passed"
+        :disabled="state.phase !== 'Settle'"
         @click="emit('next')"
       >
         下一题
       </button>
-      <button class="btn ghost" @click="emit('restart')">
-        重新开始
-      </button>
+      <button class="btn ghost" @click="emit('restart')">重新开始</button>
     </div>
   </div>
 </template>
@@ -133,8 +147,8 @@ const DIFFICULTIES: ReadonlyArray<{ key: Difficulty; label: string }> = [
 .mode-tag {
   font-size: 11px;
   color: #a8862a;
-  font-weight: 600;
-  padding: 3px 9px;
+  font-weight: 700;
+  padding: 3px 10px;
   background: #f5e6b8;
   border-radius: 12px;
 }
@@ -185,19 +199,21 @@ const DIFFICULTIES: ReadonlyArray<{ key: Difficulty; label: string }> = [
   color: #0a3f2a;
 }
 
-.seg {
-  display: flex;
-  background: #f8f6f0;
-  border-radius: 8px;
-  padding: 2px;
-  margin-bottom: 8px;
+.stat .value.time.urgent {
+  color: #b91c1c;
 }
 
-.seg-btn {
-  flex: 1;
-  padding: 5px 8px;
-  border: none;
-  background: transparent;
+.mode-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.mode-btn {
+  padding: 5px 2px;
+  border: 1px solid #e5e2d6;
+  background: #f8f6f0;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
@@ -206,9 +222,22 @@ const DIFFICULTIES: ReadonlyArray<{ key: Difficulty; label: string }> = [
   font-family: inherit;
 }
 
-.seg-btn.active {
+.mode-btn.active {
   background: #0e5c3a;
   color: #ffffff;
+  border-color: #0e5c3a;
+}
+
+.mode-name {
+  font-size: 12px;
+}
+
+.mode-desc {
+  font-size: 10px;
+  color: #6b6b6b;
+  text-align: center;
+  margin-bottom: 8px;
+  line-height: 1.4;
 }
 
 .task-hint {
@@ -227,17 +256,6 @@ const DIFFICULTIES: ReadonlyArray<{ key: Difficulty; label: string }> = [
 
 .task-line strong {
   color: #b91c1c;
-}
-
-.cushion-tag {
-  display: inline-block;
-  background: #0e5c3a;
-  color: #f5e6b8;
-  padding: 1px 7px;
-  border-radius: 10px;
-  font-size: 11px;
-  font-weight: 700;
-  margin: 0 2px;
 }
 
 .input-tip {
@@ -263,13 +281,14 @@ const DIFFICULTIES: ReadonlyArray<{ key: Difficulty; label: string }> = [
   color: #b91c1c;
 }
 
-.passed-banner {
+.game-over-banner {
   background: linear-gradient(135deg, #d4af37, #a8862a);
   color: #ffffff;
-  padding: 8px 10px;
+  padding: 10px;
   border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
   margin-bottom: 8px;
 }
 

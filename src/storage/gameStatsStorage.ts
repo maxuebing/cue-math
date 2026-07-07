@@ -1,5 +1,4 @@
-import type { Difficulty } from '../game/constants';
-import type { Point, Question } from '../game/types';
+import type { Mode, Point, Question } from '../game/types';
 import { heatmapKey } from '../game/questionClassifier';
 
 /**
@@ -23,8 +22,8 @@ export interface AttemptRecord {
   errorDistance: number;
   /** 本题耗时 ms */
   durationMs: number;
-  /** 难度 */
-  difficulty: Difficulty;
+  /** 训练模式 */
+  mode: Mode;
 }
 
 /** 错题记录（含完整题面，供"重做此题"重建） */
@@ -43,7 +42,7 @@ export interface SessionSummary {
   maxCombo: number;
   total: number;
   hits: number;
-  difficulty: Difficulty;
+  mode: Mode;
 }
 
 /** 热力图桶聚合值 */

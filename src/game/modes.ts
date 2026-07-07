@@ -6,7 +6,8 @@ import {
   isQuestionValid,
   oneCushionBlockedByAny,
 } from './pathValidation';
-import type { Cushion, Point, Question, TwoCushionPath } from './types';
+import { MODE_RULES } from './modeRules';
+import type { Cushion, Mode, Point, Question, TwoCushionPath } from './types';
 
 /**
  * 题面生成策略：2 库 kick + 多障碍球
@@ -114,10 +115,12 @@ function placeWithBudget(
 /**
  * 生成一道合法 2 库 kick 题（多障碍球）
  * 障碍球预算从 3 逐级提升到 5，优先用更少障碍球
+ * @param fixedCue 可选固定母球位置（新手模式用）
  */
-export function generateTwoCushion(): Question {
+export function generateTwoCushion(fixedCue?: Point): Question {
   for (let attempt = 0; attempt < 500; attempt++) {
-    const cueBall: Point = { x: rand(MARGIN, TABLE_W - MARGIN), y: rand(TABLE_H * 0.55, TABLE_H - MARGIN) };
+    const cueBall: Point =
+      fixedCue ?? { x: rand(MARGIN, TABLE_W - MARGIN), y: rand(TABLE_H * 0.55, TABLE_H - MARGIN) };
     const targetBall: Point = { x: rand(MARGIN, TABLE_W - MARGIN), y: rand(MARGIN, TABLE_H * 0.45) };
     const cushions = randomChoice(CUSHION_PAIRS);
     const realPath = computeTwoCushionPath(cueBall, targetBall, cushions);
@@ -142,6 +145,17 @@ export function generateTwoCushion(): Question {
     }
   }
   return makeFallback();
+}
+
+/** 新手模式固定母球位置（左下角） */
+const NOVICE_CUE: Point = { x: 80, y: 600 };
+
+/**
+ * 按模式生成题面：新手固定母球，其余模式随机
+ */
+export function generateQuestion(mode: Mode): Question {
+  const fixedCue = MODE_RULES[mode].cueStrategy === 'fixed' ? NOVICE_CUE : undefined;
+  return generateTwoCushion(fixedCue);
 }
 
 /** 兜底题面：预置多组合法模板，逐个校验 */

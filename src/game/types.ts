@@ -22,6 +22,9 @@ export type GameStateName =
 /** 训练模式（Phase 3 扩展为多模式） */
 export type Mode = 'novice' | 'advanced' | 'master' | 'time';
 
+/** 游戏结束原因 */
+export type GameEndReason = 'pass' | 'timeup' | 'mistakesup';
+
 /** 2 库路径固定 4 点元组：[母球, 第一库撞点, 第二库撞点, 目标球] */
 export type TwoCushionPath = [Point, Point, Point, Point];
 

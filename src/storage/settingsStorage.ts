@@ -1,8 +1,9 @@
-import { LS_KEY_SETTINGS, type Difficulty } from '../game/constants';
+import { LS_KEY_SETTINGS } from '../game/constants';
+import type { Mode } from '../game/types';
 
 /**
  * 用户设置持久化（cuemath.settings.v1）
- * 音效 / 震动 / 难度开关，带容错读取与版本化 key。
+ * 音效 / 震动 / 训练模式。
  */
 
 export interface UserSettings {
@@ -10,14 +11,14 @@ export interface UserSettings {
   sound: boolean;
   /** 震动开关 */
   vibrate: boolean;
-  /** 难度（影响命中容差） */
-  difficulty: Difficulty;
+  /** 训练模式 */
+  mode: Mode;
 }
 
 const DEFAULTS: UserSettings = {
   sound: true,
   vibrate: true,
-  difficulty: 'normal',
+  mode: 'advanced',
 };
 
 /** 读取设置，缺失/异常返回默认值 */

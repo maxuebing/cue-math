@@ -1,20 +1,31 @@
 import { reactive, shallowRef, watch } from 'vue';
 import { StateMachine } from '../game/stateMachine';
-import { generateTwoCushion } from '../game/modes';
+import { generateQuestion } from '../game/modes';
 import { isHit } from '../game/diamondSystem';
 import { distance } from '../game/geometry';
-import { ADVANCED_PASS_COMBO, DIFFICULTY, type Difficulty } from '../game/constants';
+import { MODE_RULES, type ModeRule } from '../game/modeRules';
 import { getBestScore, saveBestScore } from '../storage/localStorage';
 import { loadSettings, saveSettings, type UserSettings } from '../storage/settingsStorage';
 import { recordAttempt, recordSession } from '../storage/gameStatsStorage';
 import { useFeedback } from './useFeedback';
+import { useCountdown } from './useCountdown';
 import type { TableApp } from '../game/TableApp';
-import type { AnswerResult, Cushion, GameStateName, Point, Question } from '../game/types';
+import type {
+  AnswerResult,
+  Cushion,
+  GameEndReason,
+  GameStateName,
+  Mode,
+  Point,
+  Question,
+} from '../game/types';
 
 /** 暴露给视图的响应式游戏状态 */
 export interface GameReactiveState {
   /** 当前状态机阶段 */
   phase: GameStateName;
+  /** 当前训练模式 */
+  mode: Mode;
   /** 当前得分 */
   score: number;
   /** 当前连击数 */
@@ -27,14 +38,20 @@ export interface GameReactiveState {
   formula: { cushions: [Cushion, Cushion] } | null;
   /** 是否已通关 */
   passed: boolean;
-  /** 当前题开始时间戳（用于复盘耗时统计） */
+  /** 游戏结束原因（通关/超时/错满） */
+  gameEndReason: GameEndReason | null;
+  /** 当前局错误数（大师模式用） */
+  mistakes: number;
+  /** 限时模式剩余时间 ms */
+  timeRemainingMs: number;
+  /** 当前题开始时间戳 */
   attemptStartedAt: number;
 }
 
 /** 单题命中得分 */
 const SCORE_PER_HIT = 10;
 
-/** 当前局累计统计（用于 session 摘要） */
+/** 当前局累计统计 */
 interface SessionStats {
   total: number;
   hits: number;
@@ -44,43 +61,67 @@ interface SessionStats {
 /**
  * 游戏主控 composable
  *
- * 桥接"响应式状态 / 状态机 / TableApp 渲染层 / 反馈 / Local Storage"。
- * 训练模式：2 库 kick（绕障碍球击目标球）。
+ * 支持四种训练模式：新手（固定母球）/ 进阶（随机）/ 大师（错3次结束）/ 限时（60s±时间）。
  */
 export function useGame() {
   const settings = reactive<UserSettings>(loadSettings());
   const feedback = useFeedback(settings);
+  const countdown = useCountdown();
 
   watch(settings, (s) => saveSettings({ ...s }), { deep: true });
 
   const state = reactive<GameReactiveState>({
     phase: 'Init',
+    mode: settings.mode,
     score: 0,
     combo: 0,
     bestScore: getBestScore(),
     lastResult: null,
     formula: null,
     passed: false,
+    gameEndReason: null,
+    mistakes: 0,
+    timeRemainingMs: 0,
     attemptStartedAt: 0,
   });
+
+  /* 倒计时同步到 state，归零触发超时结束 */
+  watch(
+    () => countdown.remainingMs.value,
+    (ms) => {
+      state.timeRemainingMs = ms;
+      if (countdown.running.value && ms <= 0) {
+        endGame('timeup');
+      }
+    },
+  );
 
   const sm = new StateMachine();
   const tableRef = shallowRef<TableApp | null>(null);
   let currentQuestion: Question | null = null;
   let sessionStats: SessionStats = { total: 0, hits: 0, maxCombo: 0 };
 
+  function rule(): ModeRule {
+    return MODE_RULES[state.mode];
+  }
+
   sm.on((s) => {
     state.phase = s;
   });
 
-  /** 注入 TableApp 实例并绑定库边点击回调 */
+  /** 注入 TableApp 实例 */
   function setTable(table: TableApp): void {
     tableRef.value = table;
     table.setOnPick(handlePick);
   }
 
-  /** 开始新一局：若上一局有答题数据，先记录 session 摘要 */
-  function start(): void {
+  /** 开始新一局（可切换模式） */
+  function start(mode?: Mode): void {
+    if (mode) {
+      settings.mode = mode;
+      state.mode = mode;
+    }
+    /* 记录上一局摘要 */
     if (sessionStats.total > 0) {
       recordSession({
         ts: Date.now(),
@@ -88,22 +129,38 @@ export function useGame() {
         maxCombo: sessionStats.maxCombo,
         total: sessionStats.total,
         hits: sessionStats.hits,
-        difficulty: settings.difficulty,
+        mode: state.mode,
       });
     }
     sessionStats = { total: 0, hits: 0, maxCombo: 0 };
+
     sm.reset();
     state.score = 0;
     state.combo = 0;
     state.passed = false;
+    state.gameEndReason = null;
+    state.mistakes = 0;
     state.lastResult = null;
+
+    /* 限时模式启动倒计时 */
+    countdown.stop();
+    const r = rule();
+    if (r.timeLimitMs > 0) {
+      countdown.start(r.timeLimitMs);
+    } else {
+      state.timeRemainingMs = 0;
+    }
+
     next();
   }
 
-  /** 生成下一题（→ Generate → Wait_Input） */
+  /** 生成下一题 */
   function next(): void {
+    if (state.gameEndReason) {
+      return;
+    }
     sm.transition('Generate');
-    currentQuestion = generateTwoCushion();
+    currentQuestion = generateQuestion(state.mode);
     state.formula = { cushions: currentQuestion.cushions };
     state.lastResult = null;
     state.attemptStartedAt = Date.now();
@@ -116,7 +173,7 @@ export function useGame() {
     sm.transition('Wait_Input');
   }
 
-  /** 重做一道错题（从复盘页触发，直接用历史题面） */
+  /** 重做一道错题 */
   function redoMistake(q: Question): void {
     sm.reset();
     sm.transition('Generate');
@@ -132,9 +189,9 @@ export function useGame() {
     sm.transition('Wait_Input');
   }
 
-  /** 库边点击处理：Wait_Input → Animation */
+  /** 库边点击处理 */
   function handlePick(userPoint: Point): void {
-    if (sm.state !== 'Wait_Input' || !currentQuestion) {
+    if (sm.state !== 'Wait_Input' || !currentQuestion || state.gameEndReason) {
       return;
     }
     const t = tableRef.value;
@@ -146,8 +203,7 @@ export function useGame() {
 
     const q = currentQuestion;
     const realPoint = q.realPath[1];
-    const tolerance = DIFFICULTY[settings.difficulty];
-    const hit = isHit(userPoint, realPoint, tolerance);
+    const hit = isHit(userPoint, realPoint, rule().tolerance);
     const userPath: Point[] = [q.cueBall, userPoint];
 
     state.lastResult = {
@@ -160,19 +216,27 @@ export function useGame() {
       errorDistance: Math.round(distance(userPoint, realPoint)),
     };
 
+    const r = rule();
     if (hit) {
       state.score += SCORE_PER_HIT;
       state.combo += 1;
       feedback.trigger('hit');
+      if (r.hitAddMs > 0 && countdown.running.value) {
+        countdown.add(r.hitAddMs);
+      }
       t.playCorrect(q.realPath, settle);
     } else {
       state.combo = 0;
+      state.mistakes += 1;
       feedback.trigger('miss');
+      if (r.missSubMs > 0 && countdown.running.value) {
+        countdown.add(-r.missSubMs);
+      }
       t.playWrong(userPath, q.realPath, settle);
     }
   }
 
-  /** 结算：Animation → Settle，记录答题与 session 累计 */
+  /** 结算 */
   function settle(): void {
     if (sm.state !== 'Animation' || !currentQuestion || !state.lastResult) {
       return;
@@ -187,7 +251,7 @@ export function useGame() {
         hit: result.hit,
         errorDistance: result.errorDistance,
         durationMs: Date.now() - state.attemptStartedAt,
-        difficulty: settings.difficulty,
+        mode: state.mode,
       },
       q,
       result.userPoint,
@@ -201,23 +265,43 @@ export function useGame() {
     if (saveBestScore(state.score)) {
       state.bestScore = state.score;
     }
-    if (state.combo >= ADVANCED_PASS_COMBO && !state.passed) {
-      state.passed = true;
-      feedback.trigger('pass');
+
+    /* 结束条件判定 */
+    const r = rule();
+    if (r.passCombo > 0 && state.combo >= r.passCombo) {
+      endGame('pass');
+    } else if (r.maxMistakes > 0 && state.mistakes >= r.maxMistakes) {
+      endGame('mistakesup');
     }
   }
 
-  /** 进入下一题：Settle → Generate → Wait_Input */
+  /** 结束本局 */
+  function endGame(reason: GameEndReason): void {
+    if (state.gameEndReason) {
+      return;
+    }
+    state.gameEndReason = reason;
+    state.passed = reason === 'pass';
+    countdown.stop();
+    feedback.trigger(reason === 'pass' ? 'pass' : 'miss');
+    const t = tableRef.value;
+    if (t) {
+      t.enableInput(false);
+    }
+  }
+
+  /** 进入下一题 */
   function gotoNext(): void {
-    if (sm.state !== 'Settle') {
+    if (sm.state !== 'Settle' || state.gameEndReason) {
       return;
     }
     next();
   }
 
-  /** 切换难度（影响命中容差） */
-  function setDifficulty(d: Difficulty): void {
-    settings.difficulty = d;
+  /** 切换模式（仅在选择界面，不立即开始） */
+  function setMode(m: Mode): void {
+    settings.mode = m;
+    state.mode = m;
   }
 
   return {
@@ -226,7 +310,7 @@ export function useGame() {
     setTable,
     start,
     gotoNext,
-    setDifficulty,
+    setMode,
     redoMistake,
     unlockAudio: feedback.unlock,
   };
